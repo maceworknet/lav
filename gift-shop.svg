@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="katman_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 19.3 21">
+  <!-- Generator: Adobe Illustrator 30.5.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: none;
+        stroke: #000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.5px;
+      }
+    </style>
+  </defs>
+  <path class="st0" d="M13.4,9v-4.5c0-2.1-1.7-3.8-3.8-3.8s-3.8,1.7-3.8,3.8v4.5M17.2,7l1.3,12c0,.7-.5,1.2-1.1,1.2H1.9c-.6,0-1.1-.5-1.1-1.1,0,0,0,0,0-.1l1.3-12c0-.6.5-1,1.1-1h13c.6,0,1.1.4,1.1,1ZM6.3,9c0,.2-.2.4-.4.4s-.4-.2-.4-.4.2-.4.4-.4.4.2.4.4ZM13.8,9c0,.2-.2.4-.4.4s-.4-.2-.4-.4.2-.4.4-.4.4.2.4.4Z"/>
+  <path class="st0" d="M13.3,13.2c0-1-.8-1.8-1.9-1.8s-1.4.4-1.7,1.1c-.3-.6-.9-1.1-1.7-1.1-1,0-1.9.8-1.9,1.8,0,2.9,3.6,4.8,3.6,4.8,0,0,3.6-1.9,3.6-4.8Z"/>
+</svg>
