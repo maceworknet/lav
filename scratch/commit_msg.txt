@@ -1,0 +1,16 @@
+Kontrollu gelistirme: blok is_active filtresi, merkezi siparis durumu, kapali gunler, zil sesi
+
+- Pasif sayfa bloklari artik frontend'de gizleniyor (panel verisi korunarak sorgu filtresi)
+- Blok render dongusu ortak partial'a tasindi; statik sayfalar da panelden blok destekliyor
+- Siparis durum degisiklikleri OrderStatusService uzerinden merkezilestirildi;
+  observer ile cift gecmis/bildirim kaydi giderildi
+- iyzico odeme ve Filament durum guncelleme aksiyonlari merkezi servise baglandi
+- admin_notification_condition (paid_only/all_orders) ayari islevsel hale getirildi,
+  ayni siparis icin tekrar bildirim engellendi
+- Panele Kapali Gunler ayari eklendi; DeliveryService kapali gunlerde slot dondurmuyor
+- validateDelivery panel timezone ayarini kullaniyor
+- Varsayilan yuksek sesli zil dosyasi eklendi (public/assets/audio/bell.wav) ve
+  dosya bulunamazsa otomatik yedege dusme eklendi
+- Yeni regresyon testleri: ControlledImprovementsTest (6 test)
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

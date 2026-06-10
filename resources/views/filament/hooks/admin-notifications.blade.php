@@ -3,7 +3,11 @@
     $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
     $active = filter_var($settings['admin_audio_notification_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
     $desktopActive = filter_var($settings['admin_desktop_notification_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
-    $bellSound = $settings['admin_notification_bell_sound'] ?? 'assets/audio/bell.mp3';
+    $bellSound = $settings['admin_notification_bell_sound'] ?? 'assets/audio/bell.wav';
+    // Panelde kayıtlı dosya sunucuda yoksa mevcut varsayılan zile düş
+    if ($bellSound && !file_exists(public_path($bellSound)) && file_exists(public_path('assets/audio/bell.wav'))) {
+        $bellSound = 'assets/audio/bell.wav';
+    }
     $volume = (float)($settings['admin_notification_volume'] ?? 1.0);
     $interval = (int)($settings['admin_notification_polling_interval'] ?? 15);
 @endphp

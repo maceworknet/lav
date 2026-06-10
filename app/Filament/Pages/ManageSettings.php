@@ -34,6 +34,10 @@ class ManageSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
+
+        // JSON olarak saklanan çoklu seçim alanlarını diziye çevir
+        $settings['closed_days'] = json_decode($settings['closed_days'] ?? '[]', true) ?: [];
+
         $this->form->fill($settings);
     }
 
@@ -131,6 +135,18 @@ class ManageSettings extends Page implements HasForms
                                             ->default('18:00')
                                             ->required(),
                                     ]),
+                                \Filament\Forms\Components\CheckboxList::make('closed_days')
+                                    ->label('Kapalı Günler (Bu günlerde teslimat yapılmaz)')
+                                    ->options([
+                                        '1' => 'Pazartesi',
+                                        '2' => 'Salı',
+                                        '3' => 'Çarşamba',
+                                        '4' => 'Perşembe',
+                                        '5' => 'Cuma',
+                                        '6' => 'Cumartesi',
+                                        '7' => 'Pazar',
+                                    ])
+                                    ->columns(4),
                             ]),
                         
                         Tab::make('iyzico Ödeme Entegrasyonu')
@@ -216,7 +232,7 @@ class ManageSettings extends Page implements HasForms
                                             ->default(true),
                                         TextInput::make('admin_notification_bell_sound')
                                             ->label('Zil Sesi Dosya Yolu')
-                                            ->default('assets/audio/bell.mp3')
+                                            ->default('assets/audio/bell.wav')
                                             ->required(),
                                         TextInput::make('admin_notification_volume')
                                             ->label('Ses Seviyesi (0.0 - 1.0)')
@@ -293,11 +309,16 @@ class ManageSettings extends Page implements HasForms
         $state = $this->form->getState();
 
         foreach ($state as $key => $value) {
+            // Dizi değerleri (örn. closed_days) JSON olarak sakla
+            if (is_array($value)) {
+                $value = json_encode(array_values($value));
+            }
+
             // Determine the group
             $group = 'general';
             if (in_array($key, ['meta_title', 'meta_description'])) {
                 $group = 'seo';
-            } elseif (in_array($key, ['min_order_amount', 'free_delivery_threshold', 'same_day_delivery_active', 'timezone', 'prep_time_value', 'prep_time_unit', 'delivery_cutoff_time'])) {
+            } elseif (in_array($key, ['min_order_amount', 'free_delivery_threshold', 'same_day_delivery_active', 'timezone', 'prep_time_value', 'prep_time_unit', 'delivery_cutoff_time', 'closed_days'])) {
                 $group = 'ecommerce';
             } elseif (in_array($key, ['iyzico_test_mode', 'iyzico_api_key', 'iyzico_secret_key', 'iyzico_base_url'])) {
                 $group = 'iyzico';

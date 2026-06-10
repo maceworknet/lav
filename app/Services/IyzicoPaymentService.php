@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\PaymentTransaction;
-use App\Models\OrderStatusHistory;
 use App\Models\Setting;
 use Iyzipay\Options;
 use Iyzipay\Model\Locale;
@@ -22,6 +21,13 @@ use Illuminate\Support\Facades\Log;
 
 class IyzicoPaymentService
 {
+    protected OrderStatusService $orderStatusService;
+
+    public function __construct(OrderStatusService $orderStatusService)
+    {
+        $this->orderStatusService = $orderStatusService;
+    }
+
     /**
      * Get iyzico Options from database settings.
      */
@@ -165,15 +171,14 @@ class IyzicoPaymentService
             ]);
 
             if ($isSuccess) {
-                // Update Order Status to Paid
-                $order->update(['status' => 'paid']);
-                
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => 'paid',
-                    'note' => 'iyzico ödemesi başarıyla tahsil edildi. Sipariş onaylandı.',
-                    'changed_by' => 'System',
-                ]);
+                // Durum değişikliği merkezi servis üzerinden: geçmiş kaydı,
+                // admin bildirimi ve müşteri push bildirimi tetiklenir.
+                $this->orderStatusService->updateStatus(
+                    $order,
+                    'paid',
+                    'System',
+                    'iyzico ödemesi başarıyla tahsil edildi. Sipariş onaylandı.'
+                );
 
                 return [
                     'success' => true,
@@ -181,15 +186,12 @@ class IyzicoPaymentService
                     'transaction_id' => $transaction->id
                 ];
             } else {
-                // Update Order Status to Failed
-                $order->update(['status' => 'payment_failed']);
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => 'payment_failed',
-                    'note' => 'iyzico ödemesi başarısız oldu: ' . $paymentResponse->getErrorMessage(),
-                    'changed_by' => 'System',
-                ]);
+                $this->orderStatusService->updateStatus(
+                    $order,
+                    'payment_failed',
+                    'System',
+                    'iyzico ödemesi başarısız oldu: ' . $paymentResponse->getErrorMessage()
+                );
 
                 return [
                     'success' => false,
@@ -201,13 +203,12 @@ class IyzicoPaymentService
         } catch (\Exception $e) {
             Log::error("iyzico payment error for Order #{$order->order_number}: " . $e->getMessage());
             
-            $order->update(['status' => 'payment_failed']);
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'payment_failed',
-                'note' => 'Ödeme işlemi sırasında sistem hatası oluştu: ' . $e->getMessage(),
-                'changed_by' => 'System',
-            ]);
+            $this->orderStatusService->updateStatus(
+                $order,
+                'payment_failed',
+                'System',
+                'Ödeme işlemi sırasında sistem hatası oluştu: ' . $e->getMessage()
+            );
 
             return [
                 'success' => false,

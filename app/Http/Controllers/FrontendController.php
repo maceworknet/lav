@@ -24,7 +24,9 @@ class FrontendController extends Controller
      */
     public function home()
     {
-        $page = Page::where('slug', 'ana-sayfa')->with('pageBlocks')->first();
+        $page = Page::where('slug', 'ana-sayfa')
+            ->with(['pageBlocks' => fn ($q) => $q->where('is_active', true)])
+            ->first();
         $categories = Category::where('is_active', true)->orderBy('order', 'asc')->get();
         $featuredProducts = Product::where('is_featured', true)
             ->where('stock_status', true)
@@ -179,7 +181,9 @@ class FrontendController extends Controller
      */
     public function page($slug)
     {
-        $page = Page::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $page = Page::where('slug', $slug)->where('is_active', true)
+            ->with(['pageBlocks' => fn ($q) => $q->where('is_active', true)])
+            ->firstOrFail();
 
         return view('frontend.pages.static', [
             'page' => $page,
