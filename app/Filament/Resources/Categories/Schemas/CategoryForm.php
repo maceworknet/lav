@@ -48,10 +48,8 @@ class CategoryForm
                             ->label('Açıklama')
                             ->rows(3)
                             ->columnSpanFull(),
-                        FileUpload::make('image')
+                        \App\Forms\Components\MediaPicker::make('image')
                             ->label('Kategori Öne Çıkan Görseli')
-                            ->image()
-                            ->directory('categories')
                             ->columnSpanFull(),
                     ]),
 

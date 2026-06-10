@@ -33,6 +33,7 @@ Route::get('/odeme', [CheckoutController::class, 'index'])->name('checkout.index
 Route::post('/odeme/tamamla', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/siparis-basarili/{order_number}', [CheckoutController::class, 'success'])->name('checkout.success');
 Route::get('/teslimat-saatleri', [CheckoutController::class, 'getSlots'])->name('checkout.slots');
+Route::get('/api/calculate-delivery-fee', [CheckoutController::class, 'calculateDeliveryFee'])->name('checkout.calculate-delivery-fee');
 Route::get('/taksit-secenekleri', [FrontendController::class, 'installments'])->name('installments.info');
 
 // Tracking & Static Pages
@@ -75,4 +76,18 @@ Route::middleware('auth:customer')->group(function () {
     Route::put('/hesabim/adres-guncelle/{id}', [CustomerAccountController::class, 'updateAddress'])->name('customer.account.update_address');
     Route::delete('/hesabim/adres-sil/{id}', [CustomerAccountController::class, 'deleteAddress'])->name('customer.account.delete_address');
 });
+
+// Admin Polling & Media Endpoints
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/api/new-orders', [CheckoutController::class, 'getAdminNewOrders'])->name('admin.api.new-orders');
+    Route::post('/admin/api/mark-notifications-seen', [CheckoutController::class, 'markAdminNotificationsSeen'])->name('admin.api.mark-notifications-seen');
+    
+    // Media Library API
+    Route::get('/admin/api/media', [App\Http\Controllers\MediaApiController::class, 'index'])->name('admin.api.media');
+    Route::post('/admin/api/media/upload', [App\Http\Controllers\MediaApiController::class, 'upload'])->name('admin.api.media.upload');
+});
+
+// Web Push Subscription Endpoints
+Route::post('/api/push-subscribe', [CheckoutController::class, 'subscribePush'])->name('push.subscribe');
+Route::post('/api/push-unsubscribe', [CheckoutController::class, 'unsubscribePush'])->name('push.unsubscribe');
 

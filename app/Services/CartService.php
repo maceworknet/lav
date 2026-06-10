@@ -87,14 +87,13 @@ class CartService
         int $quantity = 1, 
         array $options = [], 
         ?string $cardNote = null,
-        array $deliveryDetails = []
+        array $deliveryDetails = [],
+        array $extraGiftIds = []
     ): CartItem {
         $product = Product::findOrFail($productId);
 
-        // Options format validation and price modifier extraction
-        // $options should be: [ { option_id: X, value_id: Y, label: '...', price: Z } ]
-        
-        $existingItem = $cart->items()
+        // Find all active cart items for this product
+        $existingItems = $cart->items()
             ->where('product_id', $productId)
             ->whereJsonContains('options', $options)
             ->where('card_note', $cardNote)
@@ -102,16 +101,29 @@ class CartService
             ->where('delivery_slot', $deliveryDetails['delivery_slot'] ?? null)
             ->where('delivery_district', $deliveryDetails['delivery_district'] ?? null)
             ->where('delivery_neighborhood', $deliveryDetails['delivery_neighborhood'] ?? null)
-            ->first();
+            ->get();
 
-        if ($existingItem) {
-            $existingItem->update([
-                'quantity' => $existingItem->quantity + $quantity
-            ]);
-            return $existingItem;
+        $matchedItem = null;
+        foreach ($existingItems as $item) {
+            $itemGiftIds = $item->extraGifts->pluck('gift_product_id')->toArray();
+            sort($itemGiftIds);
+            $inputGiftIds = $extraGiftIds;
+            sort($inputGiftIds);
+            
+            if ($itemGiftIds === $inputGiftIds) {
+                $matchedItem = $item;
+                break;
+            }
         }
 
-        return CartItem::create([
+        if ($matchedItem) {
+            $matchedItem->update([
+                'quantity' => $matchedItem->quantity + $quantity
+            ]);
+            return $matchedItem;
+        }
+
+        $cartItem = CartItem::create([
             'cart_id' => $cart->id,
             'product_id' => $productId,
             'quantity' => $quantity,
@@ -124,6 +136,21 @@ class CartService
             'delivery_district' => $deliveryDetails['delivery_district'] ?? null,
             'delivery_neighborhood' => $deliveryDetails['delivery_neighborhood'] ?? null,
         ]);
+
+        // Save selected extra gifts snapshot
+        foreach ($extraGiftIds as $giftId) {
+            $gift = \App\Models\Product::find($giftId);
+            if ($gift && $gift->stock_status) {
+                $cartItem->extraGifts()->create([
+                    'gift_product_id' => $gift->id,
+                    'name_snapshot' => $gift->name,
+                    'price_snapshot' => $gift->discount_price ?? $gift->price,
+                    'quantity' => 1,
+                ]);
+            }
+        }
+
+        return $cartItem;
     }
 
     /**
@@ -188,6 +215,15 @@ class CartService
         $subtotal = 0.00;
         $deliveryFee = 0.00;
         $discountAmount = 0.00;
+        $deliveryFeeDetails = [
+            'base_fee' => 0.00,
+            'fee' => 0.00,
+            'discount_amount' => 0.00,
+            'campaign_applied' => false,
+            'campaign_name' => null,
+            'customer_message' => null,
+            'remaining_amount_for_campaign' => 0.00
+        ];
 
         // Iterate through items to calculate subtotal
         foreach ($cart->items as $item) {
@@ -201,7 +237,15 @@ class CartService
                 }
             }
 
-            $itemTotal = ($productPrice + $optionsModifier) * $item->quantity;
+            // Include extra gift prices
+            $giftsTotal = 0.00;
+            if ($item->extraGifts) {
+                foreach ($item->extraGifts as $gift) {
+                    $giftsTotal += (float) $gift->price_snapshot * $gift->quantity;
+                }
+            }
+
+            $itemTotal = (($productPrice + $optionsModifier) * $item->quantity) + $giftsTotal;
             $subtotal += $itemTotal;
         }
 
@@ -214,7 +258,8 @@ class CartService
                 ->first();
 
             if ($neighborhood) {
-                $deliveryFee = $this->deliveryService->calculateDeliveryFee($neighborhood->id, $subtotal);
+                $deliveryFeeDetails = $this->deliveryService->calculateDeliveryFee($neighborhood->id, $subtotal);
+                $deliveryFee = $deliveryFeeDetails['fee'];
             }
         }
 
@@ -234,6 +279,7 @@ class CartService
         return [
             'subtotal' => $subtotal,
             'delivery_fee' => $deliveryFee,
+            'delivery_fee_details' => $deliveryFeeDetails,
             'discount_amount' => $discountAmount,
             'total' => $total,
             'coupon_code' => $cart->coupon_code

@@ -10,6 +10,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
@@ -100,6 +101,36 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Aynı Gün Teslimat Aktif')
                                             ->inline(false),
                                     ]),
+                                Grid::make(4)
+                                    ->schema([
+                                        Select::make('timezone')
+                                            ->label('Saat Dilimi')
+                                            ->options([
+                                                'Europe/Istanbul' => 'Türkiye (Europe/Istanbul)',
+                                                'UTC' => 'UTC',
+                                            ])
+                                            ->default('Europe/Istanbul')
+                                            ->required(),
+                                        TextInput::make('prep_time_value')
+                                            ->label('Hazırlık Süresi Değeri')
+                                            ->numeric()
+                                            ->default(120)
+                                            ->required(),
+                                        Select::make('prep_time_unit')
+                                            ->label('Hazırlık Süresi Birimi')
+                                            ->options([
+                                                'minutes' => 'Dakika',
+                                                'hours' => 'Saat',
+                                                'days' => 'Gün',
+                                            ])
+                                            ->default('minutes')
+                                            ->required(),
+                                        TextInput::make('delivery_cutoff_time')
+                                            ->label('Günlük Sipariş Kapanış Saati (Cutoff)')
+                                            ->placeholder('Örn: 18:00')
+                                            ->default('18:00')
+                                            ->required(),
+                                    ]),
                             ]),
                         
                         Tab::make('iyzico Ödeme Entegrasyonu')
@@ -127,11 +158,8 @@ class ManageSettings extends Page implements HasForms
                         Tab::make('Header Ayarları')
                             ->icon('heroicon-o-bars-3')
                             ->schema([
-                                FileUpload::make('site_logo')
+                                \App\Forms\Components\MediaPicker::make('site_logo')
                                     ->label('Site Logosu')
-                                    ->directory('logos')
-                                    ->image()
-                                    ->maxSize(2048)
                                     ->columnSpanFull(),
                                 Grid::make(4)
                                     ->schema([
@@ -174,6 +202,86 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Google Developer Console\'da "Authorized redirect URIs" alanına bu adresi eklemelisiniz.'),
                                     ]),
                             ]),
+
+                        Tab::make('Yönetici Bildirimleri')
+                            ->icon('heroicon-o-bell')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        Toggle::make('admin_audio_notification_active')
+                                            ->label('Sesli Bildirim Aktif')
+                                            ->default(true),
+                                        Toggle::make('admin_desktop_notification_active')
+                                            ->label('Masaüstü (Tarayıcı) Bildirimi Aktif')
+                                            ->default(true),
+                                        TextInput::make('admin_notification_bell_sound')
+                                            ->label('Zil Sesi Dosya Yolu')
+                                            ->default('assets/audio/bell.mp3')
+                                            ->required(),
+                                        TextInput::make('admin_notification_volume')
+                                            ->label('Ses Seviyesi (0.0 - 1.0)')
+                                            ->numeric()
+                                            ->default(1.0)
+                                            ->required(),
+                                        TextInput::make('admin_notification_polling_interval')
+                                            ->label('Polleme Aralığı (Saniye)')
+                                            ->numeric()
+                                            ->default(15)
+                                            ->required(),
+                                        Select::make('admin_notification_condition')
+                                            ->label('Hangi Siparişlerde Uyarı Verilsin?')
+                                            ->options([
+                                                'paid_only' => 'Sadece Ödenen / Yeni Siparişlerde (paid)',
+                                                'all_orders' => 'Tüm Siparişlerde',
+                                            ])
+                                            ->default('paid_only')
+                                            ->required(),
+                                    ]),
+                            ]),
+
+                        Tab::make('Müşteri Bildirimleri (Push)')
+                            ->icon('heroicon-o-paper-airplane')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        Toggle::make('customer_push_active')
+                                            ->label('Web Push Bildirimleri Aktif')
+                                            ->default(true)
+                                            ->columnSpanFull(),
+                                        TextInput::make('customer_push_vapid_public_key')
+                                            ->label('VAPID Public Key')
+                                            ->placeholder('Tarayıcı push aboneliği için genel anahtar')
+                                            ->columnSpanFull(),
+                                        TextInput::make('customer_push_vapid_private_key')
+                                            ->label('VAPID Private Key')
+                                            ->placeholder('Bildirim göndermek için özel anahtar')
+                                            ->columnSpanFull(),
+                                        Textarea::make('push_msg_paid')
+                                            ->label('Sipariş Alındı Bildirim Metni')
+                                            ->default('Yeni siparişiniz başarıyla alındı!')
+                                            ->rows(2),
+                                        Textarea::make('push_msg_preparing')
+                                            ->label('Hazırlanıyor Bildirim Metni')
+                                            ->default('Siparişiniz hazırlanıyor.')
+                                            ->rows(2),
+                                        Textarea::make('push_msg_assigned_to_courier')
+                                            ->label('Kuryeye Atandı Bildirim Metni')
+                                            ->default('Siparişiniz kuryemize atandı.')
+                                            ->rows(2),
+                                        Textarea::make('push_msg_on_delivery')
+                                            ->label('Dağıtımda Bildirim Metni')
+                                            ->default('Siparişiniz teslim edilmek üzere yola çıktı!')
+                                            ->rows(2),
+                                        Textarea::make('push_msg_delivered')
+                                            ->label('Teslim Edildi Bildirim Metni')
+                                            ->default('Siparişiniz başarıyla teslim edildi!')
+                                            ->rows(2),
+                                        Textarea::make('push_msg_cancelled')
+                                            ->label('İptal Edildi Bildirim Metni')
+                                            ->default('Siparişiniz maalesef iptal edildi.')
+                                            ->rows(2),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ])
@@ -189,7 +297,7 @@ class ManageSettings extends Page implements HasForms
             $group = 'general';
             if (in_array($key, ['meta_title', 'meta_description'])) {
                 $group = 'seo';
-            } elseif (in_array($key, ['min_order_amount', 'free_delivery_threshold', 'same_day_delivery_active'])) {
+            } elseif (in_array($key, ['min_order_amount', 'free_delivery_threshold', 'same_day_delivery_active', 'timezone', 'prep_time_value', 'prep_time_unit', 'delivery_cutoff_time'])) {
                 $group = 'ecommerce';
             } elseif (in_array($key, ['iyzico_test_mode', 'iyzico_api_key', 'iyzico_secret_key', 'iyzico_base_url'])) {
                 $group = 'iyzico';
@@ -197,6 +305,10 @@ class ManageSettings extends Page implements HasForms
                 $group = 'header';
             } elseif (in_array($key, ['google_auth_active', 'google_client_id', 'google_client_secret'])) {
                 $group = 'google_auth';
+            } elseif (in_array($key, ['admin_audio_notification_active', 'admin_desktop_notification_active', 'admin_notification_bell_sound', 'admin_notification_volume', 'admin_notification_polling_interval', 'admin_notification_condition'])) {
+                $group = 'admin_notification';
+            } elseif (in_array($key, ['customer_push_active', 'customer_push_vapid_public_key', 'customer_push_vapid_private_key', 'push_msg_paid', 'push_msg_preparing', 'push_msg_assigned_to_courier', 'push_msg_on_delivery', 'push_msg_delivered', 'push_msg_cancelled'])) {
+                $group = 'customer_notification';
             }
 
             Setting::updateOrCreate(

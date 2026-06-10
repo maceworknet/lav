@@ -866,5 +866,7 @@
             </div>
         </div>
     </div>
+
+    @include('frontend.partials.push-notification-prompt')
 </body>
 </html>

@@ -65,6 +65,42 @@ class NotificationService
 
         // 2. Send SMS (through ready stub structure)
         $this->sendSMS($order->sender_phone, $template['sms']);
+
+        // 3. Send Web Push Notification
+        try {
+            $settings = Setting::pluck('value', 'key')->toArray();
+            $messageKey = "push_msg_{$status}";
+            $pushBody = $settings[$messageKey] ?? null;
+
+            if (!$pushBody) {
+                // Mapped fallbacks
+                $pushBody = match ($status) {
+                    'paid' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz ve ödemeniz onaylanmıştır.",
+                    'preparing' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz özenle hazırlanmaya başlanmıştır.",
+                    'assigned_to_courier' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz kuryemize teslim edilmiştir.",
+                    'on_delivery' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz kuryemizle yola çıkmıştır.",
+                    'delivered' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz başarıyla teslim edilmiştir.",
+                    'cancelled' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz iptal edilmiştir.",
+                    default => 'Sipariş durumunuz güncellendi.'
+                };
+            }
+
+            $pushTitle = match ($status) {
+                'paid' => 'Siparişiniz Alındı',
+                'preparing' => 'Siparişiniz Hazırlanıyor',
+                'assigned_to_courier' => 'Kuryeye Verildi',
+                'on_delivery' => 'Siparişiniz Dağıtımda',
+                'delivered' => 'Siparişiniz Teslim Edildi',
+                'cancelled' => 'Siparişiniz İptal Edildi',
+                default => 'Sipariş Güncellemesi'
+            };
+
+            $trackingUrl = url("/siparis-takip?order_number=" . $order->order_number);
+
+            app(\App\Services\PushNotificationService::class)->sendToOrderSubscriptions($order->id, $pushTitle, $pushBody, $trackingUrl);
+        } catch (\Exception $e) {
+            Log::error("Failed to send push notification for order {$order->order_number}: " . $e->getMessage());
+        }
     }
 
     /**

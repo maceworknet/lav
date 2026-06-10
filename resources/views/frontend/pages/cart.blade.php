@@ -33,7 +33,15 @@
                                     }
                                 }
                                 $itemPrice = $unitPrice + $optionsModifier;
-                                $itemTotal = $itemPrice * $item->quantity;
+                                
+                                $giftsTotal = 0.00;
+                                if ($item->extraGifts) {
+                                    foreach ($item->extraGifts as $gift) {
+                                        $giftsTotal += (float)$gift->price_snapshot * $gift->quantity;
+                                    }
+                                }
+                                
+                                $itemTotal = ($itemPrice * $item->quantity) + $giftsTotal;
                             @endphp
 
                             <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:shadow-md transition">
@@ -57,6 +65,20 @@
                                                         {{ $opt['label'] }} @if(($opt['price_modifier'] ?? 0) > 0) (+ ₺{{ number_format($opt['price_modifier'], 2) }}) @endif
                                                     </span>
                                                 @endforeach
+                                            </div>
+                                        @endif
+
+                                        <!-- Selected Extra Gifts -->
+                                        @if($item->extraGifts && $item->extraGifts->count() > 0)
+                                            <div class="mt-2.5 space-y-1">
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase block tracking-wider">Ekstra Hediyeler:</span>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach($item->extraGifts as $gift)
+                                                        <span class="inline-flex items-center text-[10px] font-bold bg-rose-50/50 text-rose-700 px-2 py-1 rounded-lg border border-rose-100">
+                                                            🎁 {{ $gift->name_snapshot }} (+ ₺{{ number_format($gift->price_snapshot, 2) }})
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endif
 
@@ -121,8 +143,25 @@
                                 @endif
                                 <div class="flex justify-between">
                                     <span>Teslimat Ücreti</span>
-                                    <span class="font-medium text-slate-400 italic">Ödeme adımında hesaplanır</span>
+                                    @if(isset($totals['delivery_fee_details']) && $totals['delivery_fee_details']['base_fee'] > 0)
+                                        <span class="font-bold text-slate-800">
+                                            @if($totals['delivery_fee'] == 0)
+                                                <span class="text-emerald-600">Ücretsiz</span>
+                                            @else
+                                                ₺{{ number_format($totals['delivery_fee'], 2) }}
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="font-medium text-slate-400 italic">Ödeme adımında hesaplanır</span>
+                                    @endif
                                 </div>
+                                
+                                @if(isset($totals['delivery_fee_details']) && $totals['delivery_fee_details']['customer_message'])
+                                    <div class="p-3 bg-rose-50/50 rounded-xl border border-rose-100/60 text-xs text-rose-700 font-bold flex items-start gap-2 mt-2 leading-relaxed">
+                                        <span class="shrink-0 text-sm">🔔</span>
+                                        <span>{{ $totals['delivery_fee_details']['customer_message'] }}</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="border-t border-slate-100 pt-5 flex justify-between items-baseline">

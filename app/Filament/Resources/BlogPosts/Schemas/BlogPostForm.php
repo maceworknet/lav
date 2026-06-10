@@ -51,10 +51,8 @@ class BlogPostForm
                             ->label('Yazı İçeriği')
                             ->columnSpanFull()
                             ->required(),
-                        FileUpload::make('image')
+                        \App\Forms\Components\MediaPicker::make('image')
                             ->label('Kapak Görseli')
-                            ->image()
-                            ->directory('blog')
                             ->columnSpanFull(),
                     ]),
 

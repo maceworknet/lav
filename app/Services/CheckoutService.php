@@ -120,9 +120,17 @@ class CheckoutService
                 }
 
                 $unitPrice = $productPrice + $optionsModifier;
-                $itemTotal = $unitPrice * $item->quantity;
+                
+                $itemGiftsTotal = 0.00;
+                if ($item->extraGifts) {
+                    foreach ($item->extraGifts as $cartGift) {
+                        $itemGiftsTotal += (float) $cartGift->price_snapshot * $cartGift->quantity;
+                    }
+                }
+                
+                $itemTotal = ($unitPrice * $item->quantity) + $itemGiftsTotal;
 
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
@@ -132,6 +140,18 @@ class CheckoutService
                     'options' => $item->options,
                     'total' => $itemTotal,
                 ]);
+
+                // Copy extra gifts from cart item to order item
+                if ($item->extraGifts) {
+                    foreach ($item->extraGifts as $cartGift) {
+                        $orderItem->extraGifts()->create([
+                            'gift_product_id' => $cartGift->gift_product_id,
+                            'name_snapshot' => $cartGift->name_snapshot,
+                            'price_snapshot' => $cartGift->price_snapshot,
+                            'quantity' => $cartGift->quantity,
+                        ]);
+                    }
+                }
             }
 
             // Coupon Usage Logging

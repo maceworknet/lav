@@ -82,8 +82,20 @@ class FrontendController extends Controller
      */
     public function product($slug)
     {
-        $product = Product::where('slug', $slug)->with(['images', 'options.values'])->firstOrFail();
+        $product = Product::where('slug', $slug)->with(['images', 'options.values', 'extraGifts' => function($q) {
+            $q->where('stock_status', true)->with('mainImage');
+        }])->firstOrFail();
         
+        $extraGifts = $product->extraGifts;
+        if ($extraGifts->isEmpty()) {
+            $extraGifts = Product::where('stock_status', true)
+                ->whereHas('categories', function($q) {
+                    $q->where('slug', 'ekstra-hediyeler');
+                })
+                ->with('mainImage')
+                ->get();
+        }
+
         $relatedProducts = Product::where('id', '!=', $product->id)
             ->where('stock_status', true)
             ->whereHas('categories', function ($q) use ($product) {
@@ -103,6 +115,7 @@ class FrontendController extends Controller
 
         return view('frontend.pages.product', [
             'product' => $product,
+            'extraGifts' => $extraGifts,
             'relatedProducts' => $relatedProducts,
             'seoModel' => $product,
             'deliveryZones' => $deliveryZones

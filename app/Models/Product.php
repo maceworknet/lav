@@ -54,6 +54,11 @@ class Product extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    public function extraGifts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_extra_gift', 'product_id', 'gift_product_id');
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('order');

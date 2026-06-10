@@ -133,6 +133,26 @@ class OrderForm
                                     ->label('Toplam Tutar')
                                     ->disabled()
                                     ->prefix('₺'),
+                                Repeater::make('extraGifts')
+                                    ->relationship('extraGifts')
+                                    ->label('Ekstra Hediyeler')
+                                    ->schema([
+                                        TextInput::make('name_snapshot')
+                                            ->label('Hediye Adı')
+                                            ->disabled(),
+                                        TextInput::make('price_snapshot')
+                                            ->label('Fiyat')
+                                            ->disabled()
+                                            ->prefix('₺'),
+                                        TextInput::make('quantity')
+                                            ->label('Adet')
+                                            ->disabled(),
+                                    ])
+                                    ->columns(3)
+                                    ->columnSpanFull()
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->reorderable(false),
                             ])
                             ->columns(6)
                             ->columnSpanFull()

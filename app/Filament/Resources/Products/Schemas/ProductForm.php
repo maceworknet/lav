@@ -84,10 +84,8 @@ class ProductForm
                         Repeater::make('images')
                             ->relationship('images')
                             ->schema([
-                                FileUpload::make('image_path')
-                                    ->label('Görsel Yükle')
-                                    ->image()
-                                    ->directory('products')
+                                \App\Forms\Components\MediaPicker::make('image_path')
+                                    ->label('Görsel Seç / Yükle')
                                     ->required(),
                                 Toggle::make('is_main')
                                     ->label('Ana Görsel Yap')
@@ -149,6 +147,15 @@ class ProductForm
                             ->columns(3)
                             ->columnSpanFull()
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Yeni Seçenek'),
+                    ]),
+
+                Section::make('Ekstra Hediye İlişkileri')
+                    ->schema([
+                        Select::make('extraGifts')
+                            ->label('Bu Ürünle Beraber Sunulacak Ekstra Hediyeler')
+                            ->relationship('extraGifts', 'name', modifyQueryUsing: fn ($query) => $query->whereHas('categories', fn ($q) => $q->where('slug', 'ekstra-hediyeler')))
+                            ->multiple()
+                            ->preload(),
                     ]),
 
                 Section::make('Stok, Etiketler ve Teslimat Kuralları')

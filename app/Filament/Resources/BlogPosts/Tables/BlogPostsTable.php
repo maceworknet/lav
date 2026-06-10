@@ -19,6 +19,7 @@ class BlogPostsTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Görsel')
+                    ->state(fn ($record) => $record->image ? (str_starts_with($record->image, 'http') || str_starts_with($record->image, '/') ? $record->image : asset('storage/' . $record->image)) : null)
                     ->square(),
                 TextColumn::make('title')
                     ->label('Yazı Başlığı')

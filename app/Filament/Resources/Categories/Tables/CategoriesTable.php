@@ -19,6 +19,7 @@ class CategoriesTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Görsel')
+                    ->state(fn ($record) => $record->image ? (str_starts_with($record->image, 'http') || str_starts_with($record->image, '/') ? $record->image : asset('storage/' . $record->image)) : null)
                     ->square(),
                 TextColumn::make('name')
                     ->label('Kategori Adı')

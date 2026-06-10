@@ -66,6 +66,8 @@ class CartController extends Controller
             'delivery_neighborhood' => 'nullable|string',
             'delivery_date' => 'nullable|date',
             'delivery_slot' => 'nullable|string',
+            'extra_gifts' => 'nullable|array',
+            'extra_gifts.*' => 'exists:products,id',
         ]);
 
         if ($request->filled('delivery_district')) {
@@ -117,7 +119,14 @@ class CartController extends Controller
         }
 
         try {
-            $this->cartService->addItem($cart, $productId, $quantity, $options, $cardNote);
+            $deliveryDetails = [
+                'delivery_district' => $request->input('delivery_district'),
+                'delivery_neighborhood' => $request->input('delivery_neighborhood'),
+                'delivery_date' => $request->input('delivery_date'),
+                'delivery_slot' => $request->input('delivery_slot'),
+            ];
+            $extraGiftIds = $request->input('extra_gifts', []);
+            $this->cartService->addItem($cart, $productId, $quantity, $options, $cardNote, $deliveryDetails, $extraGiftIds);
             
             if ($request->input('buy_now')) {
                 if ($request->ajax() || $request->wantsJson()) {
@@ -270,16 +279,40 @@ class CartController extends Controller
                 }
             }
 
+            $productPrice = (float)($item->product->discount_price ?? $item->product->price);
+            $optionsModifier = 0.00;
+            if (is_array($item->options)) {
+                foreach ($item->options as $opt) {
+                    $optionsModifier += (float) ($opt['price_modifier'] ?? 0);
+                }
+            }
+            $basePrice = $productPrice + $optionsModifier;
+            $itemGiftsTotal = 0.00;
+            $gifts = [];
+            if ($item->extraGifts) {
+                foreach ($item->extraGifts as $gift) {
+                    $itemGiftsTotal += (float)$gift->price_snapshot * $gift->quantity;
+                    $gifts[] = [
+                        'id' => $gift->gift_product_id,
+                        'name' => $gift->name_snapshot,
+                        'price' => (float)$gift->price_snapshot,
+                        'quantity' => $gift->quantity
+                    ];
+                }
+            }
+            $itemTotal = ($basePrice * $item->quantity) + $itemGiftsTotal;
+
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
                 'name' => $item->product->name,
-                'price' => (float)$item->price,
+                'price' => $basePrice,
                 'quantity' => $item->quantity,
-                'total' => (float)($item->price * $item->quantity),
+                'total' => $itemTotal,
                 'options_label' => $optionsLabel,
                 'image_url' => $item->product->mainImage ? $item->product->mainImage->url : null,
-                'slug' => $item->product->slug
+                'slug' => $item->product->slug,
+                'extra_gifts' => $gifts
             ];
         });
 

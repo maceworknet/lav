@@ -230,22 +230,52 @@
                             
                             <div class="max-h-60 overflow-y-auto divide-y divide-slate-50 pr-2">
                                 @foreach($cart->items as $item)
-                                    <div class="py-3 flex justify-between gap-4 text-xs">
-                                        <div>
-                                            <span class="font-bold text-slate-800">{{ $item->product->name }}</span>
-                                            <span class="text-slate-400 font-medium ml-1">x{{ $item->quantity }}</span>
-                                        </div>
-                                        @php
-                                            $unitPrice = (float)($item->product->discount_price ?? $item->product->price);
-                                            $optionsModifier = 0.00;
-                                            if(is_array($item->options)) {
-                                                foreach($item->options as $opt) {
-                                                    $optionsModifier += (float)($opt['price_modifier'] ?? 0);
+                                    <div class="py-3 text-xs border-b border-slate-50 last:border-b-0">
+                                        <div class="flex justify-between gap-4">
+                                            <div>
+                                                <span class="font-bold text-slate-800">{{ $item->product->name }}</span>
+                                                <span class="text-slate-400 font-medium ml-1">x{{ $item->quantity }}</span>
+                                            </div>
+                                            @php
+                                                $unitPrice = (float)($item->product->discount_price ?? $item->product->price);
+                                                $optionsModifier = 0.00;
+                                                if(is_array($item->options)) {
+                                                    foreach($item->options as $opt) {
+                                                        $optionsModifier += (float)($opt['price_modifier'] ?? 0);
+                                                    }
                                                 }
-                                            }
-                                            $itemTotal = ($unitPrice + $optionsModifier) * $item->quantity;
-                                        @endphp
-                                        <span class="font-bold text-slate-700">₺{{ number_format($itemTotal, 2) }}</span>
+                                                $giftsTotal = 0.00;
+                                                if ($item->extraGifts) {
+                                                    foreach ($item->extraGifts as $gift) {
+                                                        $giftsTotal += (float)$gift->price_snapshot * $gift->quantity;
+                                                    }
+                                                }
+                                                $itemTotal = (($unitPrice + $optionsModifier) * $item->quantity) + $giftsTotal;
+                                            @endphp
+                                            <span class="font-bold text-slate-700">₺{{ number_format($itemTotal, 2) }}</span>
+                                        </div>
+                                        
+                                        <!-- Selected Options -->
+                                        @if(is_array($item->options) && count($item->options) > 0)
+                                            <div class="mt-1 flex flex-wrap gap-1">
+                                                @foreach($item->options as $opt)
+                                                    <span class="inline-flex items-center text-[9px] font-bold bg-rose-50 text-rose-600 px-1.5 py-0.25 rounded-full border border-rose-100/50">
+                                                        {{ $opt['label'] }} @if(($opt['price_modifier'] ?? 0) > 0) (+ ₺{{ number_format($opt['price_modifier'], 2) }}) @endif
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        <!-- Selected Extra Gifts -->
+                                        @if($item->extraGifts && $item->extraGifts->count() > 0)
+                                            <div class="mt-1 flex flex-wrap gap-1">
+                                                @foreach($item->extraGifts as $gift)
+                                                    <span class="inline-flex items-center text-[9px] font-bold bg-rose-50/50 text-rose-700 px-1.5 py-0.25 rounded-md border border-rose-100">
+                                                        🎁 {{ $gift->name_snapshot }} (+ ₺{{ number_format($gift->price_snapshot, 2) }})
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -357,7 +387,7 @@
             neighborhoodSelect.disabled = true;
             
             // Reset fee
-            updateDeliveryFee(0);
+            updateDeliveryFee(0, null, null);
 
             if (!selectedDistrict) return;
 
@@ -368,6 +398,7 @@
                     const opt = document.createElement('option');
                     opt.value = neigh.name;
                     opt.textContent = neigh.name;
+                    opt.setAttribute('data-id', neigh.id);
                     opt.setAttribute('data-fee', neigh.delivery_fee);
                     opt.setAttribute('data-free-limit', neigh.free_delivery_threshold);
                     neighborhoodSelect.appendChild(opt);
@@ -379,26 +410,72 @@
         neighborhoodSelect.addEventListener('change', function() {
             const selectedOpt = this.options[this.selectedIndex];
             if (!selectedOpt || !this.value) {
-                updateDeliveryFee(0);
+                updateDeliveryFee(0, null, null);
                 return;
             }
 
-            const fee = parseFloat(selectedOpt.getAttribute('data-fee')) || 0;
-            const freeLimit = parseFloat(selectedOpt.getAttribute('data-free-limit')) || null;
+            const neighborhoodId = selectedOpt.getAttribute('data-id');
+            if (!neighborhoodId) {
+                // Fallback static calculation if no ID
+                const fee = parseFloat(selectedOpt.getAttribute('data-fee')) || 0;
+                const freeLimit = parseFloat(selectedOpt.getAttribute('data-free-limit')) || null;
 
-            let deliveryFee = fee;
-            if (freeLimit && subtotalNet >= freeLimit) {
-                deliveryFee = 0;
+                let deliveryFee = fee;
+                if (freeLimit && subtotalNet >= freeLimit) {
+                    deliveryFee = 0;
+                }
+                updateDeliveryFee(deliveryFee, null, null);
+                return;
             }
 
-            updateDeliveryFee(deliveryFee);
+            // Fetch calculated delivery fee details from backend
+            fetch(`/api/calculate-delivery-fee?neighborhood_id=${neighborhoodId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const fee = parseFloat(data.fee) || 0;
+                    const message = data.customer_message || null;
+                    const campaignName = data.campaign_name || null;
+                    updateDeliveryFee(fee, message, campaignName);
+                })
+                .catch(err => {
+                    console.error("Delivery fee calculation failure: ", err);
+                    const fee = parseFloat(selectedOpt.getAttribute('data-fee')) || 0;
+                    updateDeliveryFee(fee, null, null);
+                });
         });
 
         // Recalculates total
-        function updateDeliveryFee(fee) {
+        function updateDeliveryFee(fee, campaignMessage, campaignName) {
             deliveryFeeDisplay.textContent = '₺' + fee.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const total = subtotalNet + fee;
             grandTotalDisplay.textContent = '₺' + total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            let campaignBanner = document.getElementById('delivery-campaign-banner');
+            if (!campaignBanner) {
+                campaignBanner = document.createElement('div');
+                campaignBanner.id = 'delivery-campaign-banner';
+                campaignBanner.className = 'mt-3 p-3 text-xs rounded-xl font-semibold transition-all duration-300';
+                
+                // Insert it inside the summary card, right before the checkout button wrapper
+                const summaryCard = grandTotalDisplay.closest('.bg-white');
+                const btnContainer = summaryCard.querySelector('.pt-2');
+                if (btnContainer) {
+                    summaryCard.insertBefore(campaignBanner, btnContainer);
+                }
+            }
+
+            if (campaignMessage) {
+                campaignBanner.style.display = 'block';
+                if (campaignName) {
+                    campaignBanner.className = 'mt-3 p-3 text-xs bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-xl font-semibold';
+                    campaignBanner.innerHTML = `🎉 <strong>${campaignName}</strong>: ${campaignMessage}`;
+                } else {
+                    campaignBanner.className = 'mt-3 p-3 text-xs bg-rose-50 text-rose-800 border border-rose-100 rounded-xl font-semibold';
+                    campaignBanner.innerHTML = `💡 ${campaignMessage}`;
+                }
+            } else {
+                campaignBanner.style.display = 'none';
+            }
         }
 
         // Saved Address selection listener

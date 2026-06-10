@@ -47,6 +47,9 @@ class Order extends Model
         ];
     }
 
+    public ?string $statusChangeNote = null;
+    public ?string $statusChangedBy = null;
+
     protected static function booted(): void
     {
         static::updated(function (Order $order) {
@@ -54,7 +57,7 @@ class Order extends Model
                 // 1. Log Order Status History automatically
                 try {
                     $user = auth()->user();
-                    $changedBy = $user ? $user->name : 'System';
+                    $changedBy = $order->statusChangedBy ?? ($user ? $user->name : 'System');
 
                     $statusLabels = [
                         'pending_payment' => 'Ödeme Bekliyor',
@@ -68,15 +71,31 @@ class Order extends Model
                         'refunded' => 'İade Edildi',
                     ];
                     $label = $statusLabels[$order->status] ?? $order->status;
+                    $note = $order->statusChangeNote ?? "Sipariş durumu '{$label}' olarak güncellendi.";
 
                     \App\Models\OrderStatusHistory::create([
                         'order_id' => $order->id,
                         'status' => $order->status,
-                        'note' => "Sipariş durumu '{$label}' olarak güncellendi.",
+                        'note' => $note,
                         'changed_by' => $changedBy,
                     ]);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("OrderStatusHistory log error: " . $e->getMessage());
+                }
+
+                // Create AdminOrderNotification if status is paid
+                if ($order->status === 'paid') {
+                    try {
+                        \App\Models\AdminOrderNotification::create([
+                            'order_id' => $order->id,
+                            'type' => 'new_order',
+                            'title' => 'Yeni Sipariş Alındı!',
+                            'message' => "{$order->order_number} numaralı sipariş başarıyla ödendi ve alındı.",
+                            'is_seen' => false,
+                        ]);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("AdminOrderNotification error: " . $e->getMessage());
+                    }
                 }
 
                 // 2. Trigger notifications

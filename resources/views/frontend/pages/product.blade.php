@@ -168,6 +168,32 @@
                             </div>
                         @endif
 
+                        <!-- Ekstra Hediyeler -->
+                        @if(isset($extraGifts) && $extraGifts->count() > 0)
+                            <div class="mt-6 space-y-4">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Ekstra Hediyeler (Opsiyonel)</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    @foreach($extraGifts as $gift)
+                                        <label class="flex items-center gap-3 bg-white hover:bg-rose-50/10 p-3.5 rounded-2xl border border-slate-200 hover:border-rose-200 cursor-pointer transition duration-300 shadow-sm relative group">
+                                            <input type="checkbox" name="extra_gifts[]" value="{{ $gift->id }}" data-price="{{ (float)$gift->final_price }}" class="extra-gift-modifier rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-5 h-5 transition duration-300">
+                                            @if($gift->mainImage && $gift->mainImage->url)
+                                                <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
+                                                    <img src="{{ $gift->mainImage->url }}" alt="{{ $gift->name }}" class="w-full h-full object-cover">
+                                                </div>
+                                            @endif
+                                            <div class="flex flex-col min-w-0">
+                                                <a href="{{ route('product', $gift->slug) }}" target="_blank" onclick="event.stopPropagation();" class="text-sm font-semibold text-slate-800 hover:text-rose-600 transition truncate">{{ $gift->name }}</a>
+                                                @if($gift->short_description)
+                                                    <span class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{{ $gift->short_description }}</span>
+                                                @endif
+                                                <span class="text-xs font-black text-rose-600 mt-1">₺{{ number_format($gift->final_price, 2) }}</span>
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Personal Message Note -->
                         <div class="mt-6 space-y-2">
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Kişisel Kart Notu (Opsiyonel)</label>
@@ -618,8 +644,15 @@
                 }
             });
 
+            let extraGiftsModifier = 0.00;
+            document.querySelectorAll('.extra-gift-modifier').forEach(el => {
+                if (el.type === 'checkbox' && el.checked) {
+                    extraGiftsModifier += parseFloat(el.getAttribute('data-price')) || 0;
+                }
+            });
+
             const unitTotal = basePrice + optionsModifier;
-            const finalTotal = unitTotal * qty;
+            const finalTotal = (unitTotal * qty) + extraGiftsModifier;
             
             // Formatted parts
             const formatted = finalTotal.toFixed(2);
@@ -692,6 +725,11 @@
         // Add event listeners on options change
         document.querySelectorAll('.option-modifier').forEach(el => {
             el.addEventListener('change', updateTotalPrice);
+        });
+
+        document.querySelectorAll('.extra-gift-modifier').forEach(el => {
+            el.addEventListener('change', updateTotalPrice);
+            el.addEventListener('change', updateWhatsAppLink);
         });
 
         // Initialize pricing on page load
@@ -992,7 +1030,14 @@
                 }
             });
             
-            const totalPrice = (basePrice + optionsModifier) * qty;
+            let extraGiftsModifier = 0.00;
+            document.querySelectorAll('.extra-gift-modifier').forEach(el => {
+                if (el.type === 'checkbox' && el.checked) {
+                    extraGiftsModifier += parseFloat(el.getAttribute('data-price')) || 0;
+                }
+            });
+            
+            const totalPrice = ((basePrice + optionsModifier) * qty) + extraGiftsModifier;
             const formattedPrice = totalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
 
             // Get scheduling data

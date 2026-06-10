@@ -116,15 +116,11 @@ class PageForm
                                                 Repeater::make('slides')
                                                     ->label('Slaytlar')
                                                     ->schema([
-                                                        FileUpload::make('desktop_image')
+                                                        \App\Forms\Components\MediaPicker::make('desktop_image')
                                                             ->label('Masaüstü Görseli')
-                                                            ->directory('slider')
-                                                            ->image()
                                                             ->required(),
-                                                        FileUpload::make('mobile_image')
+                                                        \App\Forms\Components\MediaPicker::make('mobile_image')
                                                             ->label('Mobil Görseli')
-                                                            ->directory('slider')
-                                                            ->image()
                                                             ->required(),
                                                         TextInput::make('button_url')
                                                             ->label('Slayt Linki / Yönlendirme Adresi (Opsiyonel)'),
@@ -239,10 +235,8 @@ class PageForm
                                                 Repeater::make('banner_items')
                                                     ->label('Görseller')
                                                     ->schema([
-                                                        FileUpload::make('image')
+                                                        \App\Forms\Components\MediaPicker::make('image')
                                                             ->label('Arka Plan Görseli')
-                                                            ->directory('banners')
-                                                            ->image()
                                                             ->required()
                                                             ->columnSpan(2),
                                                         TextInput::make('banner_subtitle')

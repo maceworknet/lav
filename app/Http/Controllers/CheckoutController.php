@@ -87,6 +87,26 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Calculate delivery fee for the current cart (JSON endpoint).
+     */
+    public function calculateDeliveryFee(Request $request)
+    {
+        $request->validate([
+            'neighborhood_id' => 'required|integer',
+        ]);
+
+        $cart = $this->getCart();
+        $totals = $this->cartService->getTotals($cart);
+        
+        $feeDetails = $this->deliveryService->calculateDeliveryFee(
+            $request->input('neighborhood_id'),
+            $totals['subtotal']
+        );
+
+        return response()->json($feeDetails);
+    }
+
+    /**
      * Process order submission and iyzico payment.
      */
     public function process(Request $request)
@@ -130,6 +150,18 @@ class CheckoutController extends Controller
 
         if ($cart->items->count() === 0) {
             return redirect()->route('cart.index')->with('error', 'Sepetiniz boş.');
+        }
+
+        // Validate delivery district, neighborhood, date, and slot
+        $deliveryValidation = $this->deliveryService->validateDelivery(
+            $request->input('recipient_district'),
+            $request->input('recipient_neighborhood'),
+            $request->input('delivery_date'),
+            $request->input('delivery_slot')
+        );
+
+        if (!$deliveryValidation['valid']) {
+            return redirect()->back()->withErrors(['delivery_slot' => $deliveryValidation['message']])->withInput();
         }
 
         // Format card number cleanly (strip spaces)
@@ -255,5 +287,76 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         return view('frontend.pages.success', compact('order'));
+    }
+
+    /**
+     * Get unseen admin order notifications.
+     */
+    public function getAdminNewOrders(Request $request)
+    {
+        $notifications = \App\Models\AdminOrderNotification::where('is_seen', false)
+            ->with('order')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($notifications);
+    }
+
+    /**
+     * Mark all unseen admin order notifications as seen.
+     */
+    public function markAdminNotificationsSeen(Request $request)
+    {
+        \App\Models\AdminOrderNotification::where('is_seen', false)->update([
+            'is_seen' => true,
+            'seen_at' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Subscribe customer/order for web push notifications.
+     */
+    public function subscribePush(Request $request)
+    {
+        $request->validate([
+            'endpoint' => 'required|string',
+            'keys.p256dh' => 'required|string',
+            'keys.auth' => 'required|string',
+            'order_id' => 'nullable|integer',
+        ]);
+
+        $customerId = auth('customer')->id();
+        $orderId = $request->input('order_id');
+
+        $subscription = \App\Models\PushSubscription::updateOrCreate(
+            ['endpoint' => $request->input('endpoint')],
+            [
+                'customer_id' => $customerId,
+                'order_id' => $orderId,
+                'public_key' => $request->input('keys.p256dh'),
+                'auth_token' => $request->input('keys.auth'),
+                'user_agent' => $request->userAgent(),
+                'is_active' => true,
+            ]
+        );
+
+        return response()->json(['success' => true, 'subscription_id' => $subscription->id]);
+    }
+
+    /**
+     * Unsubscribe web push notifications.
+     */
+    public function unsubscribePush(Request $request)
+    {
+        $request->validate([
+            'endpoint' => 'required|string',
+        ]);
+
+        \App\Models\PushSubscription::where('endpoint', $request->input('endpoint'))
+            ->update(['is_active' => false]);
+
+        return response()->json(['success' => true]);
     }
 }

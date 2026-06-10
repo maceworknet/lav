@@ -24,22 +24,131 @@ class DeliveryService
     }
 
     /**
-     * Calculate delivery fee for a specific neighborhood and subtotal.
+     * Calculate delivery fee details for a specific neighborhood and subtotal.
      */
-    public function calculateDeliveryFee(int $neighborhoodId, float $subtotal): float
+    public function calculateDeliveryFee(int $neighborhoodId, float $subtotal): array
     {
-        $neighborhood = DeliveryNeighborhood::find($neighborhoodId);
+        $neighborhood = DeliveryNeighborhood::with('zone')->find($neighborhoodId);
 
         if (!$neighborhood || !$neighborhood->is_active) {
-            return 0.00;
+            return [
+                'base_fee' => 0.00,
+                'fee' => 0.00,
+                'discount_amount' => 0.00,
+                'campaign_applied' => false,
+                'campaign_name' => null,
+                'customer_message' => null,
+                'remaining_amount_for_campaign' => 0.00
+            ];
         }
 
-        // Check if order subtotal qualifies for free delivery
-        if (!is_null($neighborhood->free_delivery_threshold) && $subtotal >= (float) $neighborhood->free_delivery_threshold) {
-            return 0.00;
+        // 1. Get base fee: Neighborhood fee, fallback to Zone base fee
+        $baseFee = (float) $neighborhood->delivery_fee;
+        if ($baseFee <= 0 && $neighborhood->zone) {
+            $baseFee = (float) $neighborhood->zone->base_delivery_fee;
         }
 
-        return (float) $neighborhood->delivery_fee;
+        $finalFee = $baseFee;
+        $discountAmount = 0.00;
+        $campaignApplied = false;
+        $campaignName = null;
+        $customerMessage = null;
+        $remainingAmountForCampaign = 0.00;
+
+        // 2. Query campaigns that match
+        $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
+        $timezone = $settings['timezone'] ?? 'Europe/Istanbul';
+        $now = Carbon::now($timezone);
+        $campaigns = \App\Models\DeliveryFeeCampaign::where('is_active', true)
+            ->where(function ($q) use ($neighborhood) {
+                $q->where('delivery_neighborhood_id', $neighborhood->id)
+                  ->orWhere(function ($sq) use ($neighborhood) {
+                      $sq->whereNull('delivery_neighborhood_id')
+                         ->where('delivery_zone_id', $neighborhood->delivery_zone_id);
+                  })
+                  ->orWhere(function ($sq) {
+                      $sq->whereNull('delivery_neighborhood_id')
+                         ->whereNull('delivery_zone_id');
+                  });
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', $now);
+            })
+            ->orderBy('min_cart_total', 'desc')
+            ->get();
+
+        // Check for applied campaign
+        $appliedCampaign = null;
+        foreach ($campaigns as $camp) {
+            if ($subtotal >= (float) $camp->min_cart_total) {
+                $appliedCampaign = $camp;
+                break;
+            }
+        }
+
+        if ($appliedCampaign) {
+            $campaignApplied = true;
+            $campaignName = $appliedCampaign->name;
+            $customerMessage = $appliedCampaign->customer_message;
+
+            if ($appliedCampaign->type === 'free_delivery') {
+                $finalFee = 0.00;
+                $discountAmount = $baseFee;
+            } elseif ($appliedCampaign->type === 'fixed_fee') {
+                $fixedFee = (float) $appliedCampaign->fixed_delivery_fee;
+                $finalFee = $fixedFee;
+                $discountAmount = max(0.00, $baseFee - $fixedFee);
+            } elseif ($appliedCampaign->type === 'discount') {
+                $val = (float) $appliedCampaign->discount_value;
+                if ($appliedCampaign->discount_type === 'percent') {
+                    $discountAmount = round(($baseFee * $val) / 100, 2);
+                } else {
+                    $discountAmount = min($baseFee, $val);
+                }
+                $finalFee = max(0.00, $baseFee - $discountAmount);
+            }
+        } else {
+            // No campaign met the subtotal requirement. Find the one with the smallest min_cart_total that is > subtotal.
+            $nextCampaign = $campaigns->where('min_cart_total', '>', $subtotal)->sortBy('min_cart_total')->first();
+            if ($nextCampaign) {
+                $remainingAmountForCampaign = (float) $nextCampaign->min_cart_total - $subtotal;
+                if ($nextCampaign->customer_message) {
+                    $customerMessage = $nextCampaign->customer_message;
+                } else {
+                    $customerMessage = "Sepetinize " . number_format($remainingAmountForCampaign, 2) . " TL değerinde ürün ekleyerek kurye ücretini avantajlı yapabilirsiniz!";
+                }
+            }
+        }
+
+        // Neighborhood free delivery fallback if no campaign overrode it
+        if (!$campaignApplied && !is_null($neighborhood->free_delivery_threshold)) {
+            $threshold = (float) $neighborhood->free_delivery_threshold;
+            if ($subtotal >= $threshold) {
+                $finalFee = 0.00;
+                $discountAmount = $baseFee;
+                $campaignApplied = true;
+                $campaignName = "Mahalle Ücretsiz Teslimat Limiti";
+            } else {
+                $rem = $threshold - $subtotal;
+                if ($remainingAmountForCampaign <= 0 || $rem < $remainingAmountForCampaign) {
+                    $remainingAmountForCampaign = $rem;
+                    $customerMessage = "Sepetinize " . number_format($rem, 2) . " TL değerinde ürün ekleyerek kurye ücretini ücretsiz yapabilirsiniz!";
+                }
+            }
+        }
+
+        return [
+            'base_fee' => $baseFee,
+            'fee' => $finalFee,
+            'discount_amount' => $discountAmount,
+            'campaign_applied' => $campaignApplied,
+            'campaign_name' => $campaignName,
+            'customer_message' => $customerMessage,
+            'remaining_amount_for_campaign' => $remainingAmountForCampaign
+        ];
     }
 
     /**
@@ -47,12 +156,42 @@ class DeliveryService
      */
     public function getAvailableSlotsForDate(string $dateString): array
     {
-        $targetDate = Carbon::parse($dateString)->startOfDay();
-        $today = Carbon::today();
+        $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
+        $timezone = $settings['timezone'] ?? 'Europe/Istanbul';
+        $prepValue = (int) ($settings['prep_time_value'] ?? 120);
+        $prepUnit = $settings['prep_time_unit'] ?? 'minutes';
+        $sameDayActive = filter_var($settings['same_day_delivery_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $cutoffTimeSetting = $settings['delivery_cutoff_time'] ?? '18:00';
+
+        $targetDate = Carbon::parse($dateString)->setTimezone($timezone)->startOfDay();
+        $today = Carbon::now($timezone)->startOfDay();
 
         // 1. If target date is in the past, no slots are available
         if ($targetDate->lt($today)) {
             return [];
+        }
+
+        // 2. Same day delivery check
+        if (!$sameDayActive && $targetDate->equalTo($today)) {
+            return [];
+        }
+
+        // 3. Cutoff time check for today
+        if ($targetDate->equalTo($today) && $cutoffTimeSetting) {
+            $cutoff = Carbon::now($timezone)->setTimeFromTimeString($cutoffTimeSetting);
+            if (Carbon::now($timezone)->gt($cutoff)) {
+                return [];
+            }
+        }
+
+        // Calculate preparation time limit
+        $prepTimeLimit = Carbon::now($timezone);
+        if ($prepUnit === 'minutes') {
+            $prepTimeLimit->addMinutes($prepValue);
+        } elseif ($prepUnit === 'hours') {
+            $prepTimeLimit->addHours($prepValue);
+        } elseif ($prepUnit === 'days') {
+            $prepTimeLimit->addDays($prepValue);
         }
 
         $allSlots = DeliverySlot::where('is_active', true)->orderBy('start_time')->get();
@@ -61,20 +200,27 @@ class DeliveryService
         foreach ($allSlots as $slot) {
             $isAvailable = true;
 
-            // 2. Cutoff time check for same-day delivery
+            // 4. Cutoff time check for same-day delivery
             if ($targetDate->equalTo($today) && $slot->cutoff_time) {
-                $currentTime = Carbon::now('Europe/Istanbul');
                 $cutoffTime = Carbon::parse($slot->cutoff_time);
-                
-                // Set cutoff date/time to today for comparison
-                $cutoffDateTime = Carbon::today()->setTime($cutoffTime->hour, $cutoffTime->minute, $cutoffTime->second);
+                $cutoffDateTime = $today->copy()->setTime($cutoffTime->hour, $cutoffTime->minute, $cutoffTime->second);
 
-                if ($currentTime->gt($cutoffDateTime)) {
+                if (Carbon::now($timezone)->gt($cutoffDateTime)) {
                     $isAvailable = false; // Past cutoff time for today
                 }
             }
 
-            // 3. Capacity check
+            // 5. Preparation time check
+            if ($isAvailable) {
+                $slotStartParsed = Carbon::parse($slot->start_time);
+                $slotStartDateTime = $targetDate->copy()->setTime($slotStartParsed->hour, $slotStartParsed->minute, $slotStartParsed->second);
+
+                if ($slotStartDateTime->lt($prepTimeLimit)) {
+                    $isAvailable = false; // Too close to current time + preparation time
+                }
+            }
+
+            // 6. Capacity check
             if ($isAvailable) {
                 $activeOrdersCount = Order::where('delivery_date', $targetDate->toDateString())
                     ->where('delivery_slot', $slot->name)

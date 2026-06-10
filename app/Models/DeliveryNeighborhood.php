@@ -14,6 +14,7 @@ class DeliveryNeighborhood extends Model
         'min_order_amount',
         'free_delivery_threshold',
         'is_active',
+        'sort_order',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class DeliveryNeighborhood extends Model
             'min_order_amount' => 'decimal:2',
             'free_delivery_threshold' => 'decimal:2',
             'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 

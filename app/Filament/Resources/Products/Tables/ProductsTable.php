@@ -17,9 +17,9 @@ class ProductsTable
     {
         return $table
             ->columns([
-                ImageColumn::make('images.image_path')
+                ImageColumn::make('image')
                     ->label('Görsel')
-                    ->limit(1)
+                    ->state(fn ($record) => $record->mainImage?->url ?? $record->images->first()?->url)
                     ->square(),
                 TextColumn::make('name')
                     ->label('Ürün Adı')

@@ -11,12 +11,16 @@ class DeliveryZone extends Model
         'city',
         'district',
         'is_active',
+        'base_delivery_fee',
+        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'base_delivery_fee' => 'decimal:2',
+            'sort_order' => 'integer',
         ];
     }
 
