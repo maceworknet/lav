@@ -134,6 +134,20 @@ class AdminPanelSmokeTest extends TestCase
             ->get('/admin/manage-settings')
             ->assertStatus(200)
             ->assertSee('E-Posta (SMTP)')
-            ->assertSee('Kapalı Günler');
+            ->assertSee('Kapalı Günler')
+            ->assertSee('Mobil Görünüm');
+    }
+
+    public function test_mobile_menus_are_seeded_and_homepage_renders_mobile_components(): void
+    {
+        // Migration mobil menüleri oluşturmuş olmalı
+        $this->assertDatabaseHas('menus', ['slug' => 'mobile-bottom-menu']);
+        $this->assertDatabaseHas('menus', ['slug' => 'mobile-sidebar-menu']);
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('mobile-sidebar', false);
+        $response->assertSee('mobile-bottom-menu', false);
+        $response->assertSee('announcement-marquee', false);
     }
 }

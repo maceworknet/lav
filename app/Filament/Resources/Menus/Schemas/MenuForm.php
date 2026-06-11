@@ -47,7 +47,7 @@ class MenuForm
                             ->orderColumn('order')
                             ->collapsible()
                             ->schema([
-                                Grid::make(4)
+                                Grid::make(5)
                                     ->schema([
                                         TextInput::make('title')
                                             ->label('Başlık')
@@ -55,7 +55,28 @@ class MenuForm
                                         TextInput::make('url')
                                             ->label('Bağlantı (URL)')
                                             ->required()
-                                            ->placeholder('/kategori/guller'),
+                                            ->placeholder('/kategori/guller')
+                                            ->helperText('WhatsApp/Telefon ikonlu öğelerde "#" bırakılırsa iletişim ayarlarındaki numara kullanılır.'),
+                                        Select::make('icon')
+                                            ->label('İkon (Mobil menüler için)')
+                                            ->options([
+                                                'home' => 'Ev (Anasayfa)',
+                                                'flower' => 'Çiçek',
+                                                'heart' => 'Kalp (Favoriler)',
+                                                'user' => 'Kişi (Hesabım)',
+                                                'cart' => 'Sepet',
+                                                'package' => 'Paket (Sipariş Takip)',
+                                                'phone' => 'Telefon',
+                                                'whatsapp' => 'WhatsApp',
+                                                'instagram' => 'Instagram',
+                                                'facebook' => 'Facebook',
+                                                'mail' => 'E-posta',
+                                                'gift' => 'Hediye',
+                                                'star' => 'Yıldız',
+                                                'map' => 'Konum',
+                                            ])
+                                            ->nullable()
+                                            ->placeholder('İkonsuz'),
                                         Select::make('target')
                                             ->label('Hedef')
                                             ->options([

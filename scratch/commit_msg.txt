@@ -1,19 +1,27 @@
-Tum admin alt/detay sayfalari yeni tarza getirildi
+Mobil UI donusumu: header, soldan sidebar, alt menu, kayan duyuru, panel ayarlari
 
-- Siparis duzenleme formu sekmeli yapiya gecirildi: Genel Bakis,
-  Gonderici ve Alici, Teslimat ve Kart Notu, Siparis Icerigi;
-  durum alanina otomatik bildirim notu eklendi
-- Teslimat bolgesi formuna eksik olan ilce taban ucreti (base_delivery_fee)
-  ve siralama alanlari eklendi (servis bu alana dusuyordu ama panelden
-  yonetilemiyordu); mahalle repeater'i katlanabilir + kopyalanabilir,
-  baslikta mahalle adi + ucret gosteriliyor
-- Menu elemanlari ve sayfa bloklari surukle-birak ile siralanabilir
-  (orderColumn); manuel siralama kutulari kaldirildi
-- Sayfa bloklari repeater'i kopyalanabilir yapildi
-- Tum formlarda toggle hizalamalari (inline=false), yardimci metinler
-  (kupon deger tipi, kampanya indirim degeri, musteri sifre davranisi)
-- Tablolarda etiketsiz sutun kalmadigi dogrulandi
-- Yeni smoke testler: tum resource edit sayfalari + sekmeli siparis sayfasi
-  (50/50 geciyor)
+- Mobil header yeniden duzenlendi: solda hamburger, ortada logo,
+  sagda arama + sepet; arama ikonuna basinca logo gizlenip arama kutusu
+  aciliyor, kapatinca logo geri geliyor; favoriler mobil headerdan kaldirildi
+- Soldan acilan mobil sidebar: ustte hizli islem kartlari (girisliyse
+  Hesabim/Sepet/Takip/Odeme, degilse Giris Yap-Kayit Ol + Takip),
+  ortada panelden yonetilen menu (Menuler > Mobil Sidebar Menu),
+  altta telefon/WhatsApp/e-posta iletisim alani
+- Alta yapisik mobil alt menu (Menuler > Mobil Alt Menu): ikonlu 6 oge,
+  WhatsApp/Telefon ogelerinde URL # ise iletisim ayarlarindan otomatik cozulur
+- menu_items tablosuna icon kolonu + 14 secenekli ikon alani (MenuForm)
+- Ust duyuru metni panelden yonetilir (announcement_text); mobilde tek
+  satir modern kayan yazi (marquee), masaustunde ortali sabit
+- Mobilde kategori seridi ana sayfada en uste tasinir (CSS order, panel
+  ayarli); 4 kart gorunur, kucuk kaydirma oklari, dar bosluklar
+- Urun kartlari mobilde yan yana 2'li grid (ana sayfa, kategori,
+  favoriler, ilgili urunler) ve kompakt kart olculeri
+- Sabit WhatsApp balonu panel ayarina baglandi (varsayilan kapali);
+  sepet cekmecesindeki shadow-2xl kaldirildi (sol kenarda golge sizintisi)
+- Yeni panel sekmesi "Mobil Görünüm": kayan yazi, alt menu, kategoriler
+  ustte, sidebar hizli islemler, sidebar iletisim, WhatsApp balonu
+  ac/kapa ayarlari
+- Canli onizleme ile mobil (375px) ve masaustu (1280px) dogrulandi;
+  51/51 test geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

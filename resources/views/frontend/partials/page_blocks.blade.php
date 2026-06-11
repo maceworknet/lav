@@ -18,7 +18,17 @@
     if (!isset($latestBlogPosts) && $pageBlockTypes->contains('blog_posts')) {
         $latestBlogPosts = \App\Models\BlogPost::where('is_active', true)->latest()->take(3)->get();
     }
+
+    // Mobilde kategori şeridini en üste taşıma ayarı (panelden yönetilir)
+    $mobileCategoriesFirst = filter_var(\App\Models\Setting::where('key', 'mobile_categories_first')->value('value') ?? '1', FILTER_VALIDATE_BOOLEAN);
 @endphp
+<style>
+    @media (max-width: 767px) {
+        .page-blocks-wrapper { display: flex; flex-direction: column; }
+        .page-blocks-wrapper > .mobile-order-first { order: -1; }
+    }
+</style>
+<div class="page-blocks-wrapper">
     @if($page && $page->pageBlocks->count() > 0)
         @foreach($page->pageBlocks as $block)
             @php
@@ -181,7 +191,7 @@
                      $catTitle = array_key_exists('cat_slider_title', $content) ? $content['cat_slider_title'] : ($content['title'] ?? null);
                      $catSubtitle = array_key_exists('cat_slider_subtitle', $content) ? $content['cat_slider_subtitle'] : ($content['subtitle'] ?? null);
                  @endphp
-                 <div class="py-12 bg-white relative">
+                 <div class="py-6 md:py-12 bg-white relative {{ $mobileCategoriesFirst ? 'mobile-order-first' : '' }}">
                      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative group/cat-carousel">
                          @if(!empty($catTitle) || !empty($catSubtitle))
                              <div class="text-center max-w-3xl mx-auto mb-10">
@@ -220,7 +230,7 @@
                                              $bgStyle = 'background-color: ' . $pastelBgs[$index % count($pastelBgs)] . ';';
                                              $imgUrl = $category->image ? asset('storage/' . $category->image) : null;
                                          @endphp
-                                         <div class="cat-carousel-item flex-shrink-0 flex flex-col items-center group cursor-pointer" style="width: calc((100% - (var(--visible-items, 3) - 1) * 24px) / var(--visible-items, 3));">
+                                         <div class="cat-carousel-item flex-shrink-0 flex flex-col items-center group cursor-pointer" style="width: calc((100% - (var(--visible-items, 4) - 1) * var(--cat-gap, 12px)) / var(--visible-items, 4));">
                                              <a href="{{ route('category', $category->slug) }}" class="w-full flex flex-col items-center">
                                                  <!-- Rounded square image container -->
                                                  <div class="w-full aspect-square rounded-2xl flex items-center justify-center relative shadow-sm transition duration-300 group-hover:scale-102 group-hover:shadow-md" style="{{ $bgStyle }}">
@@ -248,13 +258,13 @@
                              </div>
 
                              <!-- Left & Right Arrow Buttons -->
-                             <button type="button" id="cat-prev-btn" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 sm:-translate-x-3 w-10 h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Önceki Kategoriler">
-                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-5 h-5 text-rose-600">
+                             <button type="button" id="cat-prev-btn" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 sm:-translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Önceki Kategoriler">
+                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-3 h-3 sm:w-5 sm:h-5 text-rose-600">
                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                                  </svg>
                              </button>
-                             <button type="button" id="cat-next-btn" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 sm:translate-x-3 w-10 h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Sonraki Kategoriler">
-                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-5 h-5 text-rose-600">
+                             <button type="button" id="cat-next-btn" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 sm:translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Sonraki Kategoriler">
+                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-3 h-3 sm:w-5 sm:h-5 text-rose-600">
                                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5 15.75 12 8.25 19.5" />
                                  </svg>
                              </button>
@@ -270,11 +280,14 @@
                          scroll-behavior: smooth;
                      }
                      :root {
-                         --visible-items: 3;
+                         --visible-items: 4;   /* Mobilde 4 kart görünür */
+                         --cat-gap: 12px;
                      }
+                     #cat-carousel-track { gap: var(--cat-gap) !important; }
                      @media (min-width: 640px) {
                          :root {
                              --visible-items: 4;
+                             --cat-gap: 24px;
                          }
                      }
                      @media (min-width: 768px) {
@@ -309,8 +322,11 @@
                              function getVisibleItems() {
                                  if (window.innerWidth >= 1024) return 8;
                                  if (window.innerWidth >= 768) return 6;
-                                 if (window.innerWidth >= 640) return 4;
-                                 return 3;
+                                 return 4; // Mobilde 4 kart görünür
+                             }
+
+                             function getItemGap() {
+                                 return window.innerWidth >= 640 ? 24 : 12;
                              }
 
                              function updateCarousel() {
@@ -336,7 +352,7 @@
 
                                  if (items.length > 0) {
                                      const itemWidth = items[0].getBoundingClientRect().width;
-                                     const gap = 24; // 24px gap between items
+                                     const gap = getItemGap();
                                      const translateValue = currentIndex * (itemWidth + gap);
                                      track.style.transform = `translateX(-${translateValue}px)`;
                                  }
@@ -536,7 +552,7 @@
                           </div>
 
                          <!-- 4-column Product Grid -->
-                         <div id="handpicked-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                         <div id="handpicked-products-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                              @include('frontend.partials.product_cards', ['products' => $handpickedProducts])
                          </div>
 
@@ -673,7 +689,7 @@
                             </a>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                             @include('frontend.partials.product_cards', ['products' => $featuredProducts])
                         </div>
                     </div>
@@ -949,3 +965,4 @@
 
         @endforeach
 @endif
+</div>

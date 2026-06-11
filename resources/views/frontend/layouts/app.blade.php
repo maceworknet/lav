@@ -21,6 +21,13 @@
         $googleAnalyticsCode = \App\Models\Setting::where('key', 'google_analytics_code')->value('value');
         $footerLogo = \App\Models\Setting::where('key', 'footer_logo')->value('value');
         $footerDescription = \App\Models\Setting::where('key', 'footer_description')->value('value');
+
+        $announcementText = \App\Models\Setting::where('key', 'announcement_text')->value('value');
+        if ($announcementText === null) {
+            $announcementText = 'Diyarbakır İçi Tüm Siparişlerde Aynı Gün Teslimat ve Canlı Kurye Takibi!';
+        }
+        $mobileMarqueeActive = filter_var(\App\Models\Setting::where('key', 'mobile_marquee_active')->value('value') ?? '1', FILTER_VALIDATE_BOOLEAN);
+        $whatsappFloatActive = filter_var(\App\Models\Setting::where('key', 'whatsapp_float_active')->value('value') ?? '0', FILTER_VALIDATE_BOOLEAN);
         $headerSearchActive = \App\Models\Setting::where('key', 'header_search_active')->value('value') ?? '1';
         $headerAccountActive = \App\Models\Setting::where('key', 'header_account_active')->value('value') ?? '1';
         $headerFavoritesActive = \App\Models\Setting::where('key', 'header_favorites_active')->value('value') ?? '1';
@@ -89,27 +96,75 @@
 </head>
 <body class="text-slate-800 flex flex-col min-h-screen">
 
-    <!-- 1. Top Announcement Bar -->
-    <div class="bg-rose-600 text-white text-xs py-2 px-4 text-center font-medium tracking-wide">
-        Diyarbakır İçi Tüm Siparişlerde Aynı Gün Teslimat ve Canlı Kurye Takibi!
-    </div>
+    <!-- 1. Top Announcement Bar (panelden yönetilir) -->
+    @if(trim($announcementText) !== '')
+        <div class="bg-rose-600 text-white text-xs py-2 font-medium tracking-wide overflow-hidden">
+            @if($mobileMarqueeActive)
+                <!-- Mobil: tek satır kayan yazı / Masaüstü: ortalı sabit -->
+                <div class="md:hidden announcement-marquee whitespace-nowrap">
+                    <span class="announcement-marquee-track">
+                        <span class="px-8">{{ $announcementText }}</span>
+                        <span class="px-8" aria-hidden="true">{{ $announcementText }}</span>
+                        <span class="px-8" aria-hidden="true">{{ $announcementText }}</span>
+                    </span>
+                </div>
+                <div class="hidden md:block text-center px-4">{{ $announcementText }}</div>
+            @else
+                <div class="text-center px-4">{{ $announcementText }}</div>
+            @endif
+        </div>
+        <style>
+            .announcement-marquee { position: relative; }
+            .announcement-marquee-track {
+                display: inline-flex;
+                animation: announcement-scroll 18s linear infinite;
+                will-change: transform;
+            }
+            @keyframes announcement-scroll {
+                from { transform: translateX(0); }
+                to { transform: translateX(-33.333%); }
+            }
+        </style>
+    @endif
 
     <!-- 2. Header / Navigation -->
     <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-rose-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                
-                <!-- Logo -->
-                <div class="flex-shrink-0">
+            <div class="flex items-center justify-between h-20 relative">
+
+                <!-- Hamburger (Mobil - Sol) -->
+                <button id="mobile-sidebar-open" class="md:hidden p-2 -ml-2 text-slate-600 hover:text-rose-600 focus:outline-none shrink-0" aria-label="Menüyü Aç">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+
+                <!-- Logo (Mobilde ortada, masaüstünde solda) -->
+                <div id="header-logo" class="flex-shrink-0 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:left-auto">
                     <a href="/" class="flex items-center gap-2">
                         @if($siteLogo)
-                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}" class="h-12 w-auto max-w-[200px] object-contain">
+                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}" class="h-10 md:h-12 w-auto max-w-[160px] md:max-w-[200px] object-contain">
                         @else
-                            <span class="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight transition">
+                            <span class="font-serif text-xl sm:text-3xl font-extrabold tracking-tight transition">
                                 <span class="text-amber-500 hover:text-amber-600">Lav</span> <span class="text-rose-600 hover:text-rose-700 font-light">Çiçekçilik</span>
                             </span>
                         @endif
                     </a>
+                </div>
+
+                <!-- Mobil Arama Kutusu (arama ikonuna basınca logo yerine açılır) -->
+                <div id="mobile-search-bar" class="hidden md:hidden flex-grow mx-2">
+                    <form action="{{ route('search') }}" method="GET" class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-slate-400 shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
+                        </svg>
+                        <input type="text" name="q" id="mobile-search-input" placeholder="Çiçek ara..." class="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none font-medium">
+                        <button type="button" id="mobile-close-search-btn" class="text-slate-400 hover:text-rose-600 transition p-1 shrink-0" title="Kapat">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Navigation Links & Search Overlay -->
@@ -143,7 +198,16 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 shrink-0">
+                <div class="flex items-center gap-1 md:gap-4 shrink-0">
+
+                    <!-- Search Icon (Mobil) -->
+                    @if($headerSearchActive == '1')
+                        <button id="mobile-open-search-btn" class="p-2 text-slate-600 hover:text-rose-600 transition focus:outline-none md:hidden" title="Arama">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z" />
+                            </svg>
+                        </button>
+                    @endif
 
                     <!-- Search Icon (Desktop) -->
                     @if($headerSearchActive == '1')
@@ -230,7 +294,7 @@
                                 $favCount = \App\Models\Favorite::where('customer_id', auth('customer')->id())->count();
                             }
                         @endphp
-                        <a href="{{ route('favorites.index') }}" class="p-2 text-slate-600 hover:text-rose-600 transition relative" title="Favoriler" id="header-favorites-btn">
+                        <a href="{{ route('favorites.index') }}" class="hidden md:block p-2 text-slate-600 hover:text-rose-600 transition relative" title="Favoriler" id="header-favorites-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                             </svg>
@@ -254,46 +318,14 @@
                         </a>
                     @endif
 
-                    <!-- Mobile Menu Button -->
-                    <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 hover:text-rose-600 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                    </button>
                 </div>
 
             </div>
         </div>
-
-        <!-- Mobile Navigation Drawer -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-rose-50 px-4 pt-2 pb-6 space-y-3 shadow-inner">
-            @foreach ($menuItems as $item)
-                <a href="{{ $item->url }}" target="{{ $item->target }}" class="block text-base font-semibold text-slate-700 hover:text-rose-600 py-2 border-b border-slate-50">
-                    {{ $item->title }}
-                </a>
-            @endforeach
-            @if(auth('customer')->check())
-                <a href="{{ route('customer.account') }}" class="block text-center bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition mt-2">
-                    Hesabım
-                </a>
-                <form action="{{ route('customer.logout') }}" method="POST" class="mt-2">
-                    @csrf
-                    <button type="submit" class="w-full text-center bg-rose-50 text-rose-600 font-bold py-3 rounded-lg hover:bg-rose-100 transition">
-                        Çıkış Yap
-                    </button>
-                </form>
-            @else
-                <div class="grid grid-cols-2 gap-3 mt-4">
-                    <a href="{{ route('customer.login') }}" class="block text-center bg-slate-100 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-200 transition">
-                        Giriş Yap
-                    </a>
-                    <a href="{{ route('customer.register') }}" class="block text-center bg-rose-600 text-white font-bold py-3 rounded-lg hover:bg-rose-700 transition">
-                        Üye Ol
-                    </a>
-                </div>
-            @endif
-        </div>
     </header>
+
+    <!-- Mobil Sidebar Menü (soldan açılır, panelden yönetilir) -->
+    @include('frontend.partials.mobile-sidebar')
 
     <!-- 3. Main Content -->
     <main class="flex-grow">
@@ -420,13 +452,16 @@
         </div>
     </footer>
 
-    <!-- WhatsApp Floating Button -->
-    @if ($whatsapp)
+    <!-- Mobil Alt Menü (panelden yönetilir) -->
+    @include('frontend.partials.mobile-bottom-menu')
+
+    <!-- WhatsApp Floating Button (panel ayarı; mobil alt menüde WhatsApp olduğu için varsayılan kapalı) -->
+    @if ($whatsapp && $whatsappFloatActive)
         @php
             $notifService = app(\App\Services\NotificationService::class);
             $whatsappUrl = $notifService->generateWhatsAppLink($whatsapp, 'Merhaba, online mağazanızdan destek almak istiyorum.');
         @endphp
-        <a href="{{ $whatsappUrl }}" target="_blank" class="fixed bottom-6 right-6 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-full shadow-2xl z-40 transition transform hover:scale-110 flex items-center justify-center" aria-label="WhatsApp Destek Hattı">
+        <a href="{{ $whatsappUrl }}" target="_blank" class="fixed bottom-6 right-6 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-full shadow-lg z-40 transition transform hover:scale-110 flex items-center justify-center" aria-label="WhatsApp Destek Hattı">
             <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.006.133-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.693.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.455h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
             </svg>
@@ -434,15 +469,64 @@
     @endif
 
     <script>
-        // Mobile menu toggle
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
+        // Mobil sidebar menü (soldan açılır)
+        (function () {
+            const openBtn = document.getElementById('mobile-sidebar-open');
+            const closeBtn = document.getElementById('mobile-sidebar-close');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
 
-        if (btn && menu) {
-            btn.addEventListener('click', () => {
-                menu.classList.toggle('hidden');
+            if (!openBtn || !sidebar || !overlay) return;
+
+            function openSidebar() {
+                sidebar.style.display = 'flex';
+                setTimeout(function () {
+                    sidebar.style.marginLeft = '0px';
+                }, 15);
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeSidebar() {
+                sidebar.style.marginLeft = '-320px';
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+                setTimeout(function () {
+                    if (sidebar.style.marginLeft === '-320px') {
+                        sidebar.style.display = 'none';
+                    }
+                }, 260);
+            }
+
+            openBtn.addEventListener('click', openSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+        })();
+
+        // Mobil arama: arama ikonuna basınca logo gizlenir, arama kutusu açılır
+        (function () {
+            const openBtn = document.getElementById('mobile-open-search-btn');
+            const closeBtn = document.getElementById('mobile-close-search-btn');
+            const bar = document.getElementById('mobile-search-bar');
+            const logo = document.getElementById('header-logo');
+            const input = document.getElementById('mobile-search-input');
+
+            if (!openBtn || !bar || !logo) return;
+
+            function openMobileSearch() {
+                logo.classList.add('hidden');
+                bar.classList.remove('hidden');
+                if (input) input.focus();
+            }
+            function closeMobileSearch() {
+                bar.classList.add('hidden');
+                logo.classList.remove('hidden');
+            }
+
+            openBtn.addEventListener('click', function () {
+                bar.classList.contains('hidden') ? openMobileSearch() : closeMobileSearch();
             });
-        }
+            if (closeBtn) closeBtn.addEventListener('click', closeMobileSearch);
+        })();
 
         // Search Overlay toggle logic
         const openSearchBtn = document.getElementById('open-search-btn');
@@ -803,7 +887,7 @@
     <div id="sidebar-cart-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
     <!-- Sidebar Cart Drawer Panel -->
-    <div id="sidebar-cart-drawer" class="fixed right-0 top-0 bottom-0 w-full sm:w-[450px] bg-white z-50 shadow-2xl transition-transform duration-300 translate-x-full flex flex-col">
+    <div id="sidebar-cart-drawer" class="fixed right-0 top-0 bottom-0 w-full sm:w-[450px] bg-white z-50 border-l border-slate-200 transition-transform duration-300 translate-x-full flex flex-col">
         <!-- Header -->
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">

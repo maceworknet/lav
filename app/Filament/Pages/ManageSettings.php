@@ -72,6 +72,57 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Fiziksel Adres')
                                             ->columnSpanFull()
                                             ->required(),
+                                        TextInput::make('announcement_text')
+                                            ->label('Üst Duyuru Çubuğu Metni')
+                                            ->placeholder('Diyarbakır İçi Tüm Siparişlerde Aynı Gün Teslimat ve Canlı Kurye Takibi!')
+                                            ->helperText('Sitenin en üstündeki renkli duyuru şeridinde gösterilir. Boş bırakılırsa şerit gizlenir.')
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        Tab::make('Mobil Görünüm')
+                            ->icon('heroicon-o-device-phone-mobile')
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        Toggle::make('mobile_marquee_active')
+                                            ->label('Duyuru Kayan Yazı (Mobil)')
+                                            ->helperText('Mobilde üst duyuru metni tek satır kayan yazı olur.')
+                                            ->inline(false)
+                                            ->default(true),
+                                        Toggle::make('mobile_bottom_menu_active')
+                                            ->label('Mobil Alt Menü Aktif')
+                                            ->helperText('Ekranın altına yapışık ikonlu menü.')
+                                            ->inline(false)
+                                            ->default(true),
+                                        Toggle::make('mobile_categories_first')
+                                            ->label('Mobilde Kategoriler En Üstte')
+                                            ->helperText('Ana sayfada kategori şeridi mobilde hero üstüne taşınır.')
+                                            ->inline(false)
+                                            ->default(true),
+                                        Toggle::make('mobile_sidebar_quick_actions_active')
+                                            ->label('Sidebar Hızlı İşlem Kartları')
+                                            ->helperText('Sidebar üstündeki Hesabım/Sepet/Takip kartları veya Giriş/Kayıt butonları.')
+                                            ->inline(false)
+                                            ->default(true),
+                                        Toggle::make('mobile_sidebar_contact_active')
+                                            ->label('Sidebar İletişim Alanı')
+                                            ->helperText('Sidebar altındaki telefon, WhatsApp ve e-posta bağlantıları.')
+                                            ->inline(false)
+                                            ->default(true),
+                                        Toggle::make('whatsapp_float_active')
+                                            ->label('Sabit WhatsApp Balonu')
+                                            ->helperText('Sağ alttaki yüzen WhatsApp butonu. Mobil alt menüde WhatsApp olduğu için varsayılan kapalıdır.')
+                                            ->inline(false)
+                                            ->default(false),
+                                    ]),
+                                \Filament\Schemas\Components\Section::make('Mobil Menü İçerikleri')
+                                    ->schema([
+                                        \Filament\Forms\Components\Placeholder::make('mobile_menus_link')
+                                            ->hiddenLabel()
+                                            ->content(new \Illuminate\Support\HtmlString(
+                                                'Mobil alt menü ve sidebar menü öğelerini (başlık, bağlantı, ikon, sıralama, silme) <a href="/admin/menus" style="text-decoration: underline; font-weight: 600;">Menüler</a> bölümünden yönetebilirsiniz: <strong>Mobil Alt Menü</strong> ve <strong>Mobil Sidebar Menü</strong>.'
+                                            )),
                                     ]),
                             ]),
                         
@@ -404,6 +455,8 @@ class ManageSettings extends Page implements HasForms
                 $group = 'header';
             } elseif (in_array($key, ['footer_logo', 'footer_description'])) {
                 $group = 'footer';
+            } elseif (in_array($key, ['mobile_marquee_active', 'mobile_bottom_menu_active', 'mobile_categories_first', 'mobile_sidebar_quick_actions_active', 'mobile_sidebar_contact_active', 'whatsapp_float_active'])) {
+                $group = 'mobile';
             } elseif (in_array($key, ['google_auth_active', 'google_client_id', 'google_client_secret'])) {
                 $group = 'google_auth';
             } elseif (in_array($key, ['mail_smtp_active', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name', 'admin_notification_email'])) {
