@@ -85,6 +85,8 @@ Route::middleware(['auth'])->group(function () {
     // Media Library API
     Route::get('/admin/api/media', [App\Http\Controllers\MediaApiController::class, 'index'])->name('admin.api.media');
     Route::post('/admin/api/media/upload', [App\Http\Controllers\MediaApiController::class, 'upload'])->name('admin.api.media.upload');
+    Route::post('/admin/api/media/delete', [App\Http\Controllers\MediaApiController::class, 'destroy'])->name('admin.api.media.delete');
+    Route::post('/admin/api/media/{media}/rename', [App\Http\Controllers\MediaApiController::class, 'rename'])->name('admin.api.media.rename');
 });
 
 // Web Push Subscription Endpoints

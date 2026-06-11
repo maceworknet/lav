@@ -219,6 +219,59 @@ class ManageSettings extends Page implements HasForms
                                     ]),
                             ]),
 
+                        Tab::make('E-Posta (SMTP)')
+                            ->icon('heroicon-o-envelope')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        Toggle::make('mail_smtp_active')
+                                            ->label('SMTP ile Mail Gönderimi Aktif')
+                                            ->helperText('Pasifken mailler sunucu varsayılanı ile (test ortamında log dosyasına) gönderilir.')
+                                            ->columnSpanFull(),
+                                        TextInput::make('mail_host')
+                                            ->label('SMTP Sunucusu (Host)')
+                                            ->placeholder('örn: smtp.gmail.com'),
+                                        TextInput::make('mail_port')
+                                            ->label('SMTP Port')
+                                            ->numeric()
+                                            ->placeholder('587'),
+                                        TextInput::make('mail_username')
+                                            ->label('SMTP Kullanıcı Adı')
+                                            ->placeholder('mail@alanadiniz.com'),
+                                        TextInput::make('mail_password')
+                                            ->label('SMTP Şifre')
+                                            ->password()
+                                            ->revealable(),
+                                        Select::make('mail_encryption')
+                                            ->label('Şifreleme')
+                                            ->options([
+                                                'tls' => 'TLS (587)',
+                                                'ssl' => 'SSL (465)',
+                                                'none' => 'Yok',
+                                            ])
+                                            ->default('tls'),
+                                        TextInput::make('mail_from_address')
+                                            ->label('Gönderen E-Posta Adresi')
+                                            ->email()
+                                            ->placeholder('info@alanadiniz.com'),
+                                        TextInput::make('mail_from_name')
+                                            ->label('Gönderen Adı')
+                                            ->placeholder('Lav Çiçekçilik'),
+                                        TextInput::make('admin_notification_email')
+                                            ->label('Site Sahibi Bildirim E-Postası')
+                                            ->email()
+                                            ->helperText('Yeni sipariş mailleri bu adrese gönderilir. Boşsa genel ayarlardaki site e-postası kullanılır.'),
+                                    ]),
+                                \Filament\Schemas\Components\Section::make('Mail Şablonları')
+                                    ->schema([
+                                        \Filament\Forms\Components\Placeholder::make('mail_templates_link')
+                                            ->hiddenLabel()
+                                            ->content(new \Illuminate\Support\HtmlString(
+                                                'Müşteri ve site sahibine gönderilen maillerin içeriklerini <a href="/admin/mail-templates" style="text-decoration: underline; font-weight: 600;">Mail Şablonları</a> sayfasından düzenleyebilirsiniz.'
+                                            )),
+                                    ]),
+                            ]),
+
                         Tab::make('Yönetici Bildirimleri')
                             ->icon('heroicon-o-bell')
                             ->schema([
@@ -326,6 +379,8 @@ class ManageSettings extends Page implements HasForms
                 $group = 'header';
             } elseif (in_array($key, ['google_auth_active', 'google_client_id', 'google_client_secret'])) {
                 $group = 'google_auth';
+            } elseif (in_array($key, ['mail_smtp_active', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name', 'admin_notification_email'])) {
+                $group = 'mail';
             } elseif (in_array($key, ['admin_audio_notification_active', 'admin_desktop_notification_active', 'admin_notification_bell_sound', 'admin_notification_volume', 'admin_notification_polling_interval', 'admin_notification_condition'])) {
                 $group = 'admin_notification';
             } elseif (in_array($key, ['customer_push_active', 'customer_push_vapid_public_key', 'customer_push_vapid_private_key', 'push_msg_paid', 'push_msg_preparing', 'push_msg_assigned_to_courier', 'push_msg_on_delivery', 'push_msg_delivered', 'push_msg_cancelled'])) {

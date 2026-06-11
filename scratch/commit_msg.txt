@@ -1,16 +1,21 @@
-Kontrollu gelistirme: blok is_active filtresi, merkezi siparis durumu, kapali gunler, zil sesi
+Admin panel: shadcn tarzi tema, WordPress tarzi medya kutuphanesi, SMTP + mail sablonlari
 
-- Pasif sayfa bloklari artik frontend'de gizleniyor (panel verisi korunarak sorgu filtresi)
-- Blok render dongusu ortak partial'a tasindi; statik sayfalar da panelden blok destekliyor
-- Siparis durum degisiklikleri OrderStatusService uzerinden merkezilestirildi;
-  observer ile cift gecmis/bildirim kaydi giderildi
-- iyzico odeme ve Filament durum guncelleme aksiyonlari merkezi servise baglandi
-- admin_notification_condition (paid_only/all_orders) ayari islevsel hale getirildi,
-  ayni siparis icin tekrar bildirim engellendi
-- Panele Kapali Gunler ayari eklendi; DeliveryService kapali gunlerde slot dondurmuyor
-- validateDelivery panel timezone ayarini kullaniyor
-- Varsayilan yuksek sesli zil dosyasi eklendi (public/assets/audio/bell.wav) ve
-  dosya bulunamazsa otomatik yedege dusme eklendi
-- Yeni regresyon testleri: ControlledImprovementsTest (6 test)
+- Panel temasi shadcn/ui esintili hale getirildi: zinc renk paleti, Inter font,
+  ince kenarlikli kartlar, yumusak koseler (render hook ile CSS, rebuild gerekmez)
+- Dashboard'a Son Siparisler widget'i, Siparisler menusune islem bekleyen rozeti eklendi
+- Medya bolumu WordPress Medya Kutuphanesi tarzina donusturuldu:
+  grid gorunum, suruklebirak coklu yukleme, toplu secim/silme,
+  detay paneli (yeniden adlandirma, URL kopyalama, tekil silme), arama + sayfalama
+- MediaPicker modalina da suruklebirak yukleme eklendi
+- Medya API: toplu silme, yeniden adlandirma ve sayfalama endpointleri
+- SMTP entegrasyonu: panelden host/port/kullanici/sifre/sifreleme/gonderen ayarlari,
+  calisma aninda mailer yapilandirmasi (MailService)
+- Mail sablonlari: mail_templates tablosu + panelden duzenlenebilir 7 varsayilan sablon
+  (5 musteri durum maili + kuryeye verildi + site sahibine yeni siparis bildirimi),
+  {degisken} yer tutucu sistemi, pasif sablon gonderilmez
+- NotificationService sablon tabanli gonderime baglandi; sablon yoksa eski metinlerle
+  geriye donuk uyumlu calisir
+- User modeline FilamentUser arayuzu eklendi (canli sunucuda panel erisimi icin gerekli)
+- Yeni testler: AdminImprovementsTest (6) + AdminPanelSmokeTest (6); toplam 41/41 geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

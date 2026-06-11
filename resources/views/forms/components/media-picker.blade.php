@@ -37,36 +37,53 @@
             }
             return '/storage/' + this.state;
         },
+        dragActive: false,
         async handleFileUpload(event) {
-            let files = event.target.files;
-            if (!files || files.length === 0) return;
-            
-            let formData = new FormData();
-            formData.append('file', files[0]);
-            
+            await this.uploadFiles(event.target.files);
+            event.target.value = '';
+        },
+        async handleDrop(event) {
+            this.dragActive = false;
+            if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+                await this.uploadFiles(event.dataTransfer.files);
+            }
+        },
+        async uploadFiles(files) {
+            let list = Array.from(files || []).filter(f => f.type.startsWith('image/'));
+            if (list.length === 0) return;
+
             this.isUploading = true;
-            try {
-                let csrfToken = document.querySelector('meta[name=&quot;csrf-token&quot;]')?.getAttribute('content') || '';
-                let response = await fetch('/admin/api/media/upload', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
+            let lastUploadedPath = null;
+            let csrfToken = document.querySelector('meta[name=&quot;csrf-token&quot;]')?.getAttribute('content') || '';
+
+            for (let file of list) {
+                let formData = new FormData();
+                formData.append('file', file);
+                try {
+                    let response = await fetch('/admin/api/media/upload', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
+                    let data = await response.json();
+                    if (data.success) {
+                        lastUploadedPath = data.media.file_path;
+                    } else {
+                        alert('Yükleme başarısız: ' + (data.message || 'Bilinmeyen hata'));
                     }
-                });
-                let data = await response.json();
-                if (data.success) {
-                    await this.loadMedia();
-                    this.selectImage(data.media.file_path);
-                } else {
-                    alert('Yükleme başarısız: ' + (data.message || 'Bilinmeyen hata'));
+                } catch (e) {
+                    console.error('Upload error:', e);
+                    alert('Yükleme sırasında bir hata oluştu.');
                 }
-            } catch (e) {
-                console.error('Upload error:', e);
-                alert('Yükleme sırasında bir hata oluştu.');
+            }
+
+            await this.loadMedia();
+            if (lastUploadedPath) {
+                this.selectImage(lastUploadedPath);
             }
             this.isUploading = false;
-            event.target.value = '';
         }
     }"
     class="space-y-2"
@@ -197,7 +214,17 @@
                     </div>
 
                     <!-- Modal Body (Grid of Images) -->
-                    <div class="flex-grow overflow-y-auto p-6 bg-slate-50/50">
+                    <div
+                        class="flex-grow overflow-y-auto p-6 bg-slate-50/50 transition"
+                        :class="dragActive ? 'ring-2 ring-rose-500 ring-inset bg-rose-50/40' : ''"
+                        @dragover.prevent="dragActive = true"
+                        @dragleave.prevent="dragActive = false"
+                        @drop.prevent="handleDrop($event)"
+                    >
+                        <!-- Sürükle-bırak ipucu -->
+                        <div x-show="dragActive" class="mb-4 text-center text-xs font-bold text-rose-600 uppercase tracking-wider">
+                            Dosyaları buraya bırakın — kütüphaneye yüklenecek
+                        </div>
                         <template x-if="isLoading">
                             <div class="flex flex-col items-center justify-center py-20 gap-3">
                                 <div class="w-10 h-10 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin"></div>

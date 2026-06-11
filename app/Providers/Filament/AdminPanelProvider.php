@@ -28,8 +28,23 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('Lav Çiçekçilik')
             ->colors([
-                'primary' => Color::Rose,
+                'primary' => Color::Zinc,
+                'gray' => Color::Zinc,
+                'danger' => Color::Red,
+                'success' => Color::Emerald,
+                'warning' => Color::Amber,
+                'info' => Color::Sky,
+            ])
+            ->navigationGroups([
+                'Siparişler',
+                'Katalog',
+                'Teslimat',
+                'Pazarlama',
+                'Müşteriler',
+                'SEO & İçerik',
+                'Site Yönetimi',
             ])
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -55,6 +70,10 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                'panels::head.end',
+                fn () => view('filament.hooks.shadcn-theme'),
+            )
             ->renderHook(
                 'panels::body.end',
                 fn () => auth()->check() ? view('filament.hooks.admin-notifications') : '',
