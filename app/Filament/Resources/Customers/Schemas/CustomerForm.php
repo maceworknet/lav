@@ -39,12 +39,15 @@ class CustomerForm
                                 TextInput::make('password')
                                     ->label('Şifre')
                                     ->password()
+                                    ->revealable()
                                     ->dehydrateStateUsing(fn ($state) => bcrypt($state))
                                     ->dehydrated(fn ($state) => filled($state))
                                     ->required(fn (string $context): bool => $context === 'create')
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->helperText('Düzenlemede boş bırakılırsa şifre değişmez.'),
                                 Toggle::make('is_guest')
                                     ->label('Misafir Kullanıcı')
+                                    ->inline(false)
                                     ->default(false),
                             ]),
                     ]),

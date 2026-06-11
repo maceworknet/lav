@@ -52,10 +52,13 @@ class PageForm
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('pageBlocks')
-                            ->label('Sayfa Blokları')
+                            ->hiddenLabel()
                             ->relationship('pageBlocks')
                             ->addActionLabel('Yeni Sayfa Bloğu Ekle')
+                            ->reorderable()
+                            ->orderColumn('order')
                             ->collapsible()
+                            ->cloneable()
                             ->itemLabel(fn (array $state): ?string => 
                                  match($state['type'] ?? null) {
                                      'hero_slider' => 'Hero Slider / Banner',
@@ -90,10 +93,6 @@ class PageForm
                                     ])
                                     ->required()
                                     ->live(),
-                                TextInput::make('order')
-                                    ->label('Sıralama')
-                                    ->numeric()
-                                    ->default(0),
 
                                 Group::make()
                                     ->statePath('content')

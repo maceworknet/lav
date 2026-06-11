@@ -1,16 +1,19 @@
-Urun formu sekmeli yapiya donusturuldu ve kullanilabilirlik iyilestirildi
+Tum admin alt/detay sayfalari yeni tarza getirildi
 
-- Form alti sekmeye ayrildi: Genel Bilgiler, Gorseller, Secenekler,
-  Ekstra Hediyeler, Stok ve Teslimat, SEO (sekme adresi URL'de korunur)
-- Ingilizce kalan repeater etiketleri Turkcelestirildi
-  (Images/Options/Values -> Gorsel Ekle / Yeni Secenek Grubu Ekle / Deger Ekle)
-- Gorseller ve secenek degerleri surukle-birak ile siralanabilir
-  (orderColumn); manuel siralama inputlari kaldirildi
-- Gorseller 2 sutunlu grid, secenek gruplari katlanabilir + kopyalanabilir
-- Stok ve Teslimat sekmesi mantikli bolumlere ayrildi:
-  Stok / Vitrin Etiketleri / Teslimat Kurallari
-- Yardimci metinler eklendi (indirimli fiyat, stok takibi, ekstra hediye
-  fallback davranisi, SEO karakter onerileri)
-- Yeni smoke test: urun duzenleme sayfasi sekmelerle aciliyor (48/48 geciyor)
+- Siparis duzenleme formu sekmeli yapiya gecirildi: Genel Bakis,
+  Gonderici ve Alici, Teslimat ve Kart Notu, Siparis Icerigi;
+  durum alanina otomatik bildirim notu eklendi
+- Teslimat bolgesi formuna eksik olan ilce taban ucreti (base_delivery_fee)
+  ve siralama alanlari eklendi (servis bu alana dusuyordu ama panelden
+  yonetilemiyordu); mahalle repeater'i katlanabilir + kopyalanabilir,
+  baslikta mahalle adi + ucret gosteriliyor
+- Menu elemanlari ve sayfa bloklari surukle-birak ile siralanabilir
+  (orderColumn); manuel siralama kutulari kaldirildi
+- Sayfa bloklari repeater'i kopyalanabilir yapildi
+- Tum formlarda toggle hizalamalari (inline=false), yardimci metinler
+  (kupon deger tipi, kampanya indirim degeri, musteri sifre davranisi)
+- Tablolarda etiketsiz sutun kalmadigi dogrulandi
+- Yeni smoke testler: tum resource edit sayfalari + sekmeli siparis sayfasi
+  (50/50 geciyor)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

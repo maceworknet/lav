@@ -25,46 +25,53 @@ class MenuForm
                                     ->label('Menü Adı')
                                     ->required()
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (string $operation, $state, callable $set) => 
+                                    ->afterStateUpdated(fn (string $operation, $state, callable $set) =>
                                         $operation === 'create' ? $set('slug', Str::slug($state)) : null
                                     ),
                                 TextInput::make('slug')
                                     ->label('Menü Kodu (Slug)')
                                     ->required()
-                                    ->unique('menus', 'slug', ignoreRecord: true),
+                                    ->unique('menus', 'slug', ignoreRecord: true)
+                                    ->helperText('header-menu ve footer-menu kodları site tarafından otomatik kullanılır.'),
                             ]),
                     ]),
 
                 Section::make('Menü Elemanları')
+                    ->description('Elemanları sürükleyerek sıralayabilirsiniz.')
                     ->schema([
                         Repeater::make('menuItems')
                             ->relationship('menuItems')
+                            ->hiddenLabel()
+                            ->addActionLabel('Menü Elemanı Ekle')
+                            ->reorderable()
+                            ->orderColumn('order')
+                            ->collapsible()
                             ->schema([
-                                TextInput::make('title')
-                                    ->label('Başlık')
-                                    ->required(),
-                                TextInput::make('url')
-                                    ->label('Bağlantı (URL)')
-                                    ->required(),
-                                Select::make('target')
-                                    ->label('Hedef')
-                                    ->options([
-                                        '_self' => 'Aynı Sayfa',
-                                        '_blank' => 'Yeni Sekme',
-                                    ])
-                                    ->default('_self')
-                                    ->required(),
-                                TextInput::make('order')
-                                    ->label('Sıralama')
-                                    ->numeric()
-                                    ->default(0),
-                                Toggle::make('is_active')
-                                    ->label('Aktif')
-                                    ->default(true),
+                                Grid::make(4)
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Başlık')
+                                            ->required(),
+                                        TextInput::make('url')
+                                            ->label('Bağlantı (URL)')
+                                            ->required()
+                                            ->placeholder('/kategori/guller'),
+                                        Select::make('target')
+                                            ->label('Hedef')
+                                            ->options([
+                                                '_self' => 'Aynı Sayfa',
+                                                '_blank' => 'Yeni Sekme',
+                                            ])
+                                            ->default('_self')
+                                            ->required(),
+                                        Toggle::make('is_active')
+                                            ->label('Aktif')
+                                            ->inline(false)
+                                            ->default(true),
+                                    ]),
                             ])
-                            ->columns(5)
-                            ->columnSpanFull()
-                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Yeni Eleman'),
+                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Yeni Eleman')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

@@ -36,7 +36,8 @@ class CouponForm
                                 TextInput::make('value')
                                     ->label('İndirim Değeri')
                                     ->numeric()
-                                    ->required(),
+                                    ->required()
+                                    ->helperText('Sabit tutar için TL, yüzde oran için % değeri girin.'),
                                 TextInput::make('min_order_amount')
                                     ->label('Minimum Sipariş Tutarı')
                                     ->numeric()
@@ -68,6 +69,7 @@ class CouponForm
                                     ->default(0),
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true)
                                     ->columnSpanFull(),
                             ]),

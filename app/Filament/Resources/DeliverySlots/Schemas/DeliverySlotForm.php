@@ -41,6 +41,7 @@ class DeliverySlotForm
                                     ->required(),
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true)
                                     ->columnSpanFull(),
                             ]),

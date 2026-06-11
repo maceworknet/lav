@@ -41,6 +41,7 @@ class BlogPostForm
                                     ->required(),
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true),
                             ]),
                         Textarea::make('summary')

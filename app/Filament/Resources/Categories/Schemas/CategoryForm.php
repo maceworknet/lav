@@ -59,12 +59,15 @@ class CategoryForm
                             ->schema([
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true),
                                 Toggle::make('show_on_header')
                                     ->label('Header\'da Göster')
+                                    ->inline(false)
                                     ->default(false),
                                 Toggle::make('show_on_homepage')
                                     ->label('Ana Sayfada Göster')
+                                    ->inline(false)
                                     ->default(false),
                             ]),
                     ]),
