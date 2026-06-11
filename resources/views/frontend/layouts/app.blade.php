@@ -17,6 +17,10 @@
         $hours = \App\Models\Setting::where('key', 'working_hours')->value('value') ?? '';
         
         $siteLogo = \App\Models\Setting::where('key', 'site_logo')->value('value');
+        $favicon = \App\Models\Setting::where('key', 'favicon')->value('value');
+        $googleAnalyticsCode = \App\Models\Setting::where('key', 'google_analytics_code')->value('value');
+        $footerLogo = \App\Models\Setting::where('key', 'footer_logo')->value('value');
+        $footerDescription = \App\Models\Setting::where('key', 'footer_description')->value('value');
         $headerSearchActive = \App\Models\Setting::where('key', 'header_search_active')->value('value') ?? '1';
         $headerAccountActive = \App\Models\Setting::where('key', 'header_account_active')->value('value') ?? '1';
         $headerFavoritesActive = \App\Models\Setting::where('key', 'header_favorites_active')->value('value') ?? '1';
@@ -35,6 +39,14 @@
     <title>{{ $seo['title'] }}</title>
     <meta name="description" content="{{ $seo['description'] }}">
     <link rel="canonical" href="{{ $seo['canonical'] }}">
+
+    <!-- Favicon (panelden yönetilir) -->
+    @if($favicon)
+        <link rel="icon" href="{{ asset('storage/' . $favicon) }}">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $favicon) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.ico') }}">
+    @endif
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{{ $seo['og_type'] }}">
@@ -69,6 +81,11 @@
             font-family: 'Poppins', sans-serif;
         }
     </style>
+
+    <!-- Google Analytics / Takip Kodu (panelden yönetilir) -->
+    @if($googleAnalyticsCode)
+        {!! $googleAnalyticsCode !!}
+    @endif
 </head>
 <body class="text-slate-800 flex flex-col min-h-screen">
 
@@ -290,11 +307,17 @@
                 
                 <!-- Col 1: About -->
                 <div class="space-y-4">
-                    <span class="font-serif text-2xl font-extrabold">
-                        <span class="text-amber-400">Lav</span> <span class="text-rose-500 font-light">Çiçekçilik</span>
-                    </span>
+                    @if($footerLogo)
+                        <a href="/" class="inline-block">
+                            <img src="{{ asset('storage/' . $footerLogo) }}" alt="{{ $siteName }}" class="h-12 w-auto max-w-[200px] object-contain">
+                        </a>
+                    @else
+                        <span class="font-serif text-2xl font-extrabold">
+                            <span class="text-amber-400">Lav</span> <span class="text-rose-500 font-light">Çiçekçilik</span>
+                        </span>
+                    @endif
                     <p class="text-sm text-slate-400 leading-relaxed pt-2">
-                        Diyarbakır genelinde taze çiçek buketleri, saksı aranjmanları ve özel tasarımlarımızla sevdiklerinize en güzel hisleri taşımak için buradayız.
+                        {{ $footerDescription ?: 'Diyarbakır genelinde taze çiçek buketleri, saksı aranjmanları ve özel tasarımlarımızla sevdiklerinize en güzel hisleri taşımak için buradayız.' }}
                     </p>
                 </div>
 

@@ -84,6 +84,11 @@ class ManageSettings extends Page implements HasForms
                                 Textarea::make('meta_description')
                                     ->label('Varsayılan SEO Açıklaması')
                                     ->required(),
+                                Textarea::make('google_analytics_code')
+                                    ->label('Google Analytics / Takip Kodu')
+                                    ->rows(6)
+                                    ->placeholder('<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>...')
+                                    ->helperText('Google Analytics, Tag Manager veya benzeri takip kodunu script etiketleriyle birlikte yapıştırın. Sitenin <head> bölümüne eklenir.'),
                             ]),
                         
                         Tab::make('E-Ticaret Kuralları')
@@ -174,9 +179,14 @@ class ManageSettings extends Page implements HasForms
                         Tab::make('Header Ayarları')
                             ->icon('heroicon-o-bars-3')
                             ->schema([
-                                \App\Forms\Components\MediaPicker::make('site_logo')
-                                    ->label('Site Logosu')
-                                    ->columnSpanFull(),
+                                Grid::make(2)
+                                    ->schema([
+                                        \App\Forms\Components\MediaPicker::make('site_logo')
+                                            ->label('Header Logosu'),
+                                        \App\Forms\Components\MediaPicker::make('favicon')
+                                            ->label('Favicon (Tarayıcı Sekme İkonu)')
+                                            ->helperText('Kare oranlı PNG veya ICO önerilir (örn. 64x64).'),
+                                    ]),
                                 Grid::make(4)
                                     ->schema([
                                         Toggle::make('header_search_active')
@@ -192,6 +202,21 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Sepetim İkonu Aktif')
                                             ->default(true),
                                     ]),
+                            ]),
+
+                        Tab::make('Footer Ayarları')
+                            ->icon('heroicon-o-rectangle-group')
+                            ->schema([
+                                \App\Forms\Components\MediaPicker::make('footer_logo')
+                                    ->label('Footer Logosu')
+                                    ->helperText('Boş bırakılırsa footer\'da yazı tabanlı site adı gösterilir. Koyu zemin için açık renkli logo önerilir.')
+                                    ->columnSpanFull(),
+                                Textarea::make('footer_description')
+                                    ->label('Footer Tanıtım Metni')
+                                    ->rows(3)
+                                    ->placeholder('Diyarbakır genelinde taze çiçek buketleri...')
+                                    ->helperText('Footer\'ın sol sütununda logo altında gösterilen kısa tanıtım yazısı.')
+                                    ->columnSpanFull(),
                             ]),
 
                         Tab::make('Google Giriş Entegrasyonu')
@@ -369,14 +394,16 @@ class ManageSettings extends Page implements HasForms
 
             // Determine the group
             $group = 'general';
-            if (in_array($key, ['meta_title', 'meta_description'])) {
+            if (in_array($key, ['meta_title', 'meta_description', 'google_analytics_code'])) {
                 $group = 'seo';
             } elseif (in_array($key, ['min_order_amount', 'free_delivery_threshold', 'same_day_delivery_active', 'timezone', 'prep_time_value', 'prep_time_unit', 'delivery_cutoff_time', 'closed_days'])) {
                 $group = 'ecommerce';
             } elseif (in_array($key, ['iyzico_test_mode', 'iyzico_api_key', 'iyzico_secret_key', 'iyzico_base_url'])) {
                 $group = 'iyzico';
-            } elseif (in_array($key, ['site_logo', 'header_search_active', 'header_account_active', 'header_favorites_active', 'header_cart_active'])) {
+            } elseif (in_array($key, ['site_logo', 'favicon', 'header_search_active', 'header_account_active', 'header_favorites_active', 'header_cart_active'])) {
                 $group = 'header';
+            } elseif (in_array($key, ['footer_logo', 'footer_description'])) {
+                $group = 'footer';
             } elseif (in_array($key, ['google_auth_active', 'google_client_id', 'google_client_secret'])) {
                 $group = 'google_auth';
             } elseif (in_array($key, ['mail_smtp_active', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name', 'admin_notification_email'])) {

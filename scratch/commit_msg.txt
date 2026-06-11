@@ -1,21 +1,16 @@
-Admin panel: shadcn tarzi tema, WordPress tarzi medya kutuphanesi, SMTP + mail sablonlari
+Site kimligi ayarlari ve otomatik WebP donusumu
 
-- Panel temasi shadcn/ui esintili hale getirildi: zinc renk paleti, Inter font,
-  ince kenarlikli kartlar, yumusak koseler (render hook ile CSS, rebuild gerekmez)
-- Dashboard'a Son Siparisler widget'i, Siparisler menusune islem bekleyen rozeti eklendi
-- Medya bolumu WordPress Medya Kutuphanesi tarzina donusturuldu:
-  grid gorunum, suruklebirak coklu yukleme, toplu secim/silme,
-  detay paneli (yeniden adlandirma, URL kopyalama, tekil silme), arama + sayfalama
-- MediaPicker modalina da suruklebirak yukleme eklendi
-- Medya API: toplu silme, yeniden adlandirma ve sayfalama endpointleri
-- SMTP entegrasyonu: panelden host/port/kullanici/sifre/sifreleme/gonderen ayarlari,
-  calisma aninda mailer yapilandirmasi (MailService)
-- Mail sablonlari: mail_templates tablosu + panelden duzenlenebilir 7 varsayilan sablon
-  (5 musteri durum maili + kuryeye verildi + site sahibine yeni siparis bildirimi),
-  {degisken} yer tutucu sistemi, pasif sablon gonderilmez
-- NotificationService sablon tabanli gonderime baglandi; sablon yoksa eski metinlerle
-  geriye donuk uyumlu calisir
-- User modeline FilamentUser arayuzu eklendi (canli sunucuda panel erisimi icin gerekli)
-- Yeni testler: AdminImprovementsTest (6) + AdminPanelSmokeTest (6); toplam 41/41 geciyor
+- Panele Footer Ayarlari sekmesi: footer logosu (medya kutuphanesinden) ve
+  footer tanitim metni; bos birakilirsa mevcut yazi tabanli marka korunur
+- Header sekmesine favicon alani eklendi; favicon site <head> bolumune
+  link rel=icon + apple-touch-icon olarak basiliyor
+- SEO sekmesine Google Analytics / takip kodu alani; kod <head> sonuna
+  oldugu gibi enjekte ediliyor
+- ImageService: GD ile JPEG/PNG/BMP yukleri otomatik WebP'ye cevriliyor
+  (kalite 82, PNG seffafligi korunur); webp/svg/gif/ico atlanir,
+  donusum hatasinda orijinal dosya korunur
+- Donusum Media modelinin creating hook'unda: hem surukle-birak/medya secici
+  yuklemeleri hem Filament form yuklemeleri kapsanir
+- Yeni testler: SiteIdentityAndWebpTest (6); toplam 47/47 geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
