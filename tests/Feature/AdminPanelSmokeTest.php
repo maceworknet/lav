@@ -61,6 +61,19 @@ class AdminPanelSmokeTest extends TestCase
             ->assertStatus(200);
     }
 
+    public function test_product_edit_page_loads_with_tabs(): void
+    {
+        $product = \App\Models\Product::where('slug', '101-kirmizi-gul-buketi')->firstOrFail();
+
+        $this->actingAs($this->admin())
+            ->get("/admin/products/{$product->id}/edit")
+            ->assertStatus(200)
+            ->assertSee('Genel Bilgiler')
+            ->assertSee('Görseller')
+            ->assertSee('Ekstra Hediyeler')
+            ->assertSee('Stok ve Teslimat');
+    }
+
     public function test_settings_page_loads_with_smtp_tab(): void
     {
         $this->actingAs($this->admin())
