@@ -38,7 +38,8 @@ class MailService
             Mail::to($to)->send(new TemplatedMail(
                 $rendered['subject'],
                 $rendered['body'],
-                $templateKey
+                $templateKey,
+                (bool) $template->is_html
             ));
 
             Log::info("Mail gönderildi [{$templateKey}] -> {$to}");

@@ -20,6 +20,7 @@ class BlogPostForm
         return $schema
             ->components([
                 Section::make('Blog Yazı Bilgileri')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -58,6 +59,7 @@ class BlogPostForm
                     ]),
 
                 Section::make('SEO Ayarları')
+                    ->columnSpanFull()
                     ->collapsed()
                     ->schema([
                         TextInput::make('meta_title')

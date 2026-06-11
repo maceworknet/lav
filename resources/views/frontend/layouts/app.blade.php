@@ -452,6 +452,15 @@
         </div>
     </footer>
 
+    <!-- Yukarı Çık Butonu -->
+    <button type="button" id="scroll-to-top" aria-label="Yukarı Çık"
+        class="fixed right-4 bottom-20 md:bottom-6 z-40 w-10 h-10 md:w-11 md:h-11 rounded-full bg-slate-900/85 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 pointer-events-none"
+        style="backdrop-filter: blur(4px);">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+        </svg>
+    </button>
+
     <!-- Mobil Alt Menü (panelden yönetilir) -->
     @include('frontend.partials.mobile-bottom-menu')
 
@@ -500,6 +509,27 @@
             openBtn.addEventListener('click', openSidebar);
             if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
             overlay.addEventListener('click', closeSidebar);
+        })();
+
+        // Yukarı çık butonu
+        (function () {
+            const topBtn = document.getElementById('scroll-to-top');
+            if (!topBtn) return;
+
+            function toggleTopBtn() {
+                if (window.scrollY > 400) {
+                    topBtn.classList.remove('opacity-0', 'pointer-events-none');
+                } else {
+                    topBtn.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            window.addEventListener('scroll', toggleTopBtn, { passive: true });
+            toggleTopBtn();
+
+            topBtn.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         })();
 
         // Mobil arama: arama ikonuna basınca logo gizlenir, arama kutusu açılır

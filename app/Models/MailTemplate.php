@@ -12,6 +12,7 @@ class MailTemplate extends Model
         'subject',
         'body',
         'recipient_type',
+        'is_html',
         'is_active',
     ];
 
@@ -19,6 +20,7 @@ class MailTemplate extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_html' => 'boolean',
         ];
     }
 

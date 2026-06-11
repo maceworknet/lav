@@ -20,6 +20,7 @@ class CategoryForm
         return $schema
             ->components([
                 Section::make('Kategori Bilgileri')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -54,6 +55,7 @@ class CategoryForm
                     ]),
 
                 Section::make('Durum ve Görünüm')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(3)
                             ->schema([
@@ -73,6 +75,7 @@ class CategoryForm
                     ]),
 
                 Section::make('SEO Ayarları')
+                    ->columnSpanFull()
                     ->collapsed()
                     ->schema([
                         TextInput::make('meta_title')

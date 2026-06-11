@@ -95,6 +95,38 @@ class AdminImprovementsTest extends TestCase
         });
     }
 
+    public function test_html_template_sends_raw_html_body(): void
+    {
+        Mail::fake();
+
+        MailTemplate::where('key', 'order_paid')->update([
+            'is_html' => true,
+            'body' => '<h1 style="color:red">Merhaba {sender_name}</h1><p>Sipariş: {order_number}</p>',
+        ]);
+
+        $order = $this->createOrder();
+        app(OrderStatusService::class)->updateStatus($order, 'paid', 'System');
+
+        Mail::assertSent(TemplatedMail::class, function (TemplatedMail $mail) use ($order) {
+            return $mail->templateKey === 'order_paid'
+                && $mail->isHtml === true
+                && str_contains($mail->bodyContent, '<h1 style="color:red">Merhaba Mail Gönderici</h1>')
+                && str_contains($mail->bodyContent, $order->order_number);
+        });
+    }
+
+    public function test_plain_text_template_is_not_marked_html(): void
+    {
+        Mail::fake();
+
+        $order = $this->createOrder('paid');
+        app(OrderStatusService::class)->updateStatus($order, 'preparing', 'Admin');
+
+        Mail::assertSent(TemplatedMail::class, function (TemplatedMail $mail) {
+            return $mail->templateKey === 'order_preparing' && $mail->isHtml === false;
+        });
+    }
+
     public function test_inactive_template_is_not_sent(): void
     {
         Mail::fake();

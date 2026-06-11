@@ -1,27 +1,22 @@
-Mobil UI donusumu: header, soldan sidebar, alt menu, kayan duyuru, panel ayarlari
+Slider ok hizalama + drag, yukari cik butonu, form duzenleri, HTML mail sablonlari
 
-- Mobil header yeniden duzenlendi: solda hamburger, ortada logo,
-  sagda arama + sepet; arama ikonuna basinca logo gizlenip arama kutusu
-  aciliyor, kapatinca logo geri geliyor; favoriler mobil headerdan kaldirildi
-- Soldan acilan mobil sidebar: ustte hizli islem kartlari (girisliyse
-  Hesabim/Sepet/Takip/Odeme, degilse Giris Yap-Kayit Ol + Takip),
-  ortada panelden yonetilen menu (Menuler > Mobil Sidebar Menu),
-  altta telefon/WhatsApp/e-posta iletisim alani
-- Alta yapisik mobil alt menu (Menuler > Mobil Alt Menu): ikonlu 6 oge,
-  WhatsApp/Telefon ogelerinde URL # ise iletisim ayarlarindan otomatik cozulur
-- menu_items tablosuna icon kolonu + 14 secenekli ikon alani (MenuForm)
-- Ust duyuru metni panelden yonetilir (announcement_text); mobilde tek
-  satir modern kayan yazi (marquee), masaustunde ortali sabit
-- Mobilde kategori seridi ana sayfada en uste tasinir (CSS order, panel
-  ayarli); 4 kart gorunur, kucuk kaydirma oklari, dar bosluklar
-- Urun kartlari mobilde yan yana 2'li grid (ana sayfa, kategori,
-  favoriler, ilgili urunler) ve kompakt kart olculeri
-- Sabit WhatsApp balonu panel ayarina baglandi (varsayilan kapali);
-  sepet cekmecesindeki shadow-2xl kaldirildi (sol kenarda golge sizintisi)
-- Yeni panel sekmesi "Mobil Görünüm": kayan yazi, alt menu, kategoriler
-  ustte, sidebar hizli islemler, sidebar iletisim, WhatsApp balonu
-  ac/kapa ayarlari
-- Canli onizleme ile mobil (375px) ve masaustu (1280px) dogrulandi;
-  51/51 test geciyor
+- Kategori slider oklari artik kategori gorselinin dikey ortasina hizalaniyor
+  (JS ile olculup resize/yuklemede guncellenir)
+- Kategori slider mouse ile basili tutup suruklenebilir (masaustu) ve
+  parmakla kaydirilabilir (mobil); birakinca en yakin karta yapisir,
+  surukleme sonrasi yanlis tiklamalar engellenir
+- Siteye yukari cik butonu eklendi (400px scroll sonrasi gorunur,
+  mobilde alt menunun ustunde konumlanir)
+- MediaPicker bileseni admin panelde Tailwind utility'leri bulunmadigi icin
+  bozuk gorunuyordu; kendi CSS'i ile yeniden yazildi (kucuk onizleme,
+  duzgun modal, surukle-birak korundu)
+- Kategori, Blog, Teslimat Bolgesi ve Menu duzenleme formlari tam genislik
+  duzene gecirildi (yan yana sikisik sutunlar kaldirildi); menu formundaki
+  tekrarlayan yardim metni tek aciklamaya tasindi
+- Mail sablonlarina HTML destegi: is_html alani (migration), HTML/duz metin
+  secimi, monospace kod editoru ve canli HTML onizleme; HTML sablonlar
+  oldugu gibi gonderilir, duz metin sablonlarda satir sonlari korunur
+- Canli dogrulama: ok-gorsel hizasi ORTALANDI, drag snap calisiyor;
+  53/53 test geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

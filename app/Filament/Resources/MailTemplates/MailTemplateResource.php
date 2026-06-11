@@ -55,12 +55,28 @@ class MailTemplateResource extends Resource
                             ->label('Mail Konusu')
                             ->required()
                             ->columnSpanFull(),
+                        Toggle::make('is_html')
+                            ->label('HTML Şablon')
+                            ->helperText('Açıksa içerik HTML kodu olarak gönderilir (tasarımlı mailler için). Kapalıysa düz metin gönderilir, satır sonları otomatik korunur.')
+                            ->live()
+                            ->default(false)
+                            ->columnSpanFull(),
                         Textarea::make('body')
-                            ->label('Mail İçeriği')
-                            ->rows(14)
+                            ->label(fn ($get) => $get('is_html') ? 'Mail İçeriği (HTML Kodu)' : 'Mail İçeriği')
+                            ->rows(18)
                             ->required()
                             ->columnSpanFull()
+                            ->extraInputAttributes(fn ($get) => $get('is_html') ? ['style' => 'font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.55;'] : [])
                             ->helperText('Kullanılabilir değişkenler: {site_name}, {site_phone}, {site_email}, {order_number}, {sender_name}, {recipient_name}, {total}, {delivery_date}, {delivery_slot}, {tracking_url}'),
+                        \Filament\Forms\Components\Placeholder::make('html_preview')
+                            ->label('Önizleme')
+                            ->columnSpanFull()
+                            ->visible(fn ($get) => (bool) $get('is_html'))
+                            ->content(fn ($get) => new \Illuminate\Support\HtmlString(
+                                '<div style="border: 1px solid rgb(228 228 231); border-radius: .6rem; padding: 1rem; background: #fff; max-height: 420px; overflow: auto;">'
+                                . ($get('body') ?: '<em style="color:#999">İçerik girildikçe önizleme burada görünür.</em>')
+                                . '</div>'
+                            )),
                         Toggle::make('is_active')
                             ->label('Aktif (Pasifse bu mail gönderilmez)')
                             ->default(true),

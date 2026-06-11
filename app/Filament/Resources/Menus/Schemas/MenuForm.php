@@ -18,6 +18,7 @@ class MenuForm
         return $schema
             ->components([
                 Section::make('Menü Bilgileri')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -37,7 +38,8 @@ class MenuForm
                     ]),
 
                 Section::make('Menü Elemanları')
-                    ->description('Elemanları sürükleyerek sıralayabilirsiniz.')
+                    ->columnSpanFull()
+                    ->description('Elemanları sürükleyerek sıralayabilirsiniz. İkonlar mobil menülerde gösterilir; WhatsApp/Telefon ikonlu öğelerde URL "#" bırakılırsa iletişim ayarlarındaki numara kullanılır.')
                     ->schema([
                         Repeater::make('menuItems')
                             ->relationship('menuItems')
@@ -55,10 +57,9 @@ class MenuForm
                                         TextInput::make('url')
                                             ->label('Bağlantı (URL)')
                                             ->required()
-                                            ->placeholder('/kategori/guller')
-                                            ->helperText('WhatsApp/Telefon ikonlu öğelerde "#" bırakılırsa iletişim ayarlarındaki numara kullanılır.'),
+                                            ->placeholder('/kategori/guller'),
                                         Select::make('icon')
-                                            ->label('İkon (Mobil menüler için)')
+                                            ->label('İkon')
                                             ->options([
                                                 'home' => 'Ev (Anasayfa)',
                                                 'flower' => 'Çiçek',

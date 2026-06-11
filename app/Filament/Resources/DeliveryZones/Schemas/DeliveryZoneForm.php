@@ -16,6 +16,7 @@ class DeliveryZoneForm
         return $schema
             ->components([
                 Section::make('Teslimat Bölgesi (İlçe)')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(3)
                             ->schema([
@@ -46,6 +47,7 @@ class DeliveryZoneForm
                     ]),
 
                 Section::make('Mahalleler ve Teslimat Ücretleri')
+                    ->columnSpanFull()
                     ->description('Mahalle ücreti, ilçe taban ücretini ezer. Ücretsiz limit dolduğunda o mahalleye teslimat ücretsiz olur.')
                     ->schema([
                         Repeater::make('neighborhoods')

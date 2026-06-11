@@ -258,12 +258,12 @@
                              </div>
 
                              <!-- Left & Right Arrow Buttons -->
-                             <button type="button" id="cat-prev-btn" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 sm:-translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Önceki Kategoriler">
+                             <button type="button" id="cat-prev-btn" class="absolute left-0 -translate-y-1/2 -translate-x-1 sm:-translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Önceki Kategoriler">
                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-3 h-3 sm:w-5 sm:h-5 text-rose-600">
                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                                  </svg>
                              </button>
-                             <button type="button" id="cat-next-btn" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 sm:translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Sonraki Kategoriler">
+                             <button type="button" id="cat-next-btn" class="absolute right-0 -translate-y-1/2 translate-x-1 sm:translate-x-3 w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-slate-50 text-slate-800 flex items-center justify-center shadow-md sm:shadow-lg border border-slate-100 transition-all duration-300 z-30 focus:outline-none hover:scale-105" aria-label="Sonraki Kategoriler">
                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.8" stroke="currentColor" class="w-3 h-3 sm:w-5 sm:h-5 text-rose-600">
                                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5 15.75 12 8.25 19.5" />
                                  </svg>
@@ -278,6 +278,13 @@
                      }
                      #cat-carousel-viewport {
                          scroll-behavior: smooth;
+                         user-select: none;
+                         -webkit-user-select: none;
+                     }
+                     #cat-carousel-viewport img {
+                         -webkit-user-drag: none;
+                         user-drag: none;
+                         pointer-events: none;
                      }
                      :root {
                          --visible-items: 4;   /* Mobilde 4 kart görünür */
@@ -356,7 +363,85 @@
                                      const translateValue = currentIndex * (itemWidth + gap);
                                      track.style.transform = `translateX(-${translateValue}px)`;
                                  }
+
+                                 alignArrows();
                              }
+
+                             // Okları kategori görselinin dikey ortasına hizala
+                             function alignArrows() {
+                                 const firstImage = track.querySelector('.cat-carousel-item .aspect-square');
+                                 if (!firstImage) return;
+                                 const trackTop = track.parentElement.getBoundingClientRect().top;
+                                 const imgRect = firstImage.getBoundingClientRect();
+                                 const centerY = (imgRect.top - trackTop) + (imgRect.height / 2);
+                                 if (prevBtn) prevBtn.style.top = centerY + 'px';
+                                 if (nextBtn) nextBtn.style.top = centerY + 'px';
+                             }
+
+                             function getCurrentTranslate() {
+                                 const itemWidth = items.length ? items[0].getBoundingClientRect().width : 0;
+                                 return currentIndex * (itemWidth + getItemGap());
+                             }
+
+                             // Sürükleyerek kaydırma (masaüstü mouse + mobil dokunmatik)
+                             let dragStartX = null;
+                             let dragStartTranslate = 0;
+                             let dragMoved = false;
+
+                             viewport.style.touchAction = 'pan-y';
+                             viewport.style.cursor = 'grab';
+
+                             viewport.addEventListener('pointerdown', (e) => {
+                                 dragStartX = e.clientX;
+                                 dragStartTranslate = getCurrentTranslate();
+                                 dragMoved = false;
+                                 track.style.transition = 'none';
+                                 viewport.style.cursor = 'grabbing';
+                                 clearInterval(autoPlayInterval);
+                             });
+
+                             window.addEventListener('pointermove', (e) => {
+                                 if (dragStartX === null) return;
+                                 const delta = e.clientX - dragStartX;
+                                 if (Math.abs(delta) > 5) dragMoved = true;
+                                 const itemWidth = items[0].getBoundingClientRect().width;
+                                 const gap = getItemGap();
+                                 const maxTranslate = Math.max(0, totalItems - getVisibleItems()) * (itemWidth + gap);
+                                 let next = dragStartTranslate - delta;
+                                 next = Math.max(-40, Math.min(maxTranslate + 40, next)); // hafif esneme payı
+                                 track.style.transform = `translateX(-${next}px)`;
+                             });
+
+                             window.addEventListener('pointerup', (e) => {
+                                 if (dragStartX === null) return;
+                                 const delta = e.clientX - dragStartX;
+                                 dragStartX = null;
+                                 track.style.transition = '';
+                                 viewport.style.cursor = 'grab';
+
+                                 const itemWidth = items[0].getBoundingClientRect().width;
+                                 const gap = getItemGap();
+                                 const step = itemWidth + gap;
+                                 const maxIndex = Math.max(0, totalItems - getVisibleItems());
+
+                                 // Bırakılan konuma en yakın karta yapış
+                                 const target = (dragStartTranslate - delta) / step;
+                                 currentIndex = Math.max(0, Math.min(maxIndex, Math.round(target)));
+                                 updateCarousel();
+                                 resetAutoPlay();
+                             });
+
+                             // Sürükleme sonrası yanlışlıkla linke tıklamayı engelle
+                             track.addEventListener('click', (e) => {
+                                 if (dragMoved) {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     dragMoved = false;
+                                 }
+                             }, true);
+
+                             // Görseller yüklenince ok hizasını tazele
+                             window.addEventListener('load', alignArrows);
 
                              function nextSlide() {
                                  const visibleItems = getVisibleItems();

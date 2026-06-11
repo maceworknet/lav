@@ -15,7 +15,8 @@ class TemplatedMail extends Mailable
     public function __construct(
         public string $subjectLine,
         public string $bodyContent,
-        public string $templateKey = ''
+        public string $templateKey = '',
+        public bool $isHtml = false
     ) {
     }
 
@@ -28,8 +29,10 @@ class TemplatedMail extends Mailable
 
     public function content(): Content
     {
+        // HTML şablonlarda içerik olduğu gibi gönderilir;
+        // düz metin şablonlarda kaçışlanıp satır sonları <br>'a çevrilir.
         return new Content(
-            htmlString: nl2br(e($this->bodyContent)),
+            htmlString: $this->isHtml ? $this->bodyContent : nl2br(e($this->bodyContent)),
         );
     }
 }
