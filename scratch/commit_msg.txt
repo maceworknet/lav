@@ -1,16 +1,21 @@
-Site kimligi ayarlari ve otomatik WebP donusumu
+Admin panel: kapsamli shadcn/ui tema donusumu
 
-- Panele Footer Ayarlari sekmesi: footer logosu (medya kutuphanesinden) ve
-  footer tanitim metni; bos birakilirsa mevcut yazi tabanli marka korunur
-- Header sekmesine favicon alani eklendi; favicon site <head> bolumune
-  link rel=icon + apple-touch-icon olarak basiliyor
-- SEO sekmesine Google Analytics / takip kodu alani; kod <head> sonuna
-  oldugu gibi enjekte ediliyor
-- ImageService: GD ile JPEG/PNG/BMP yukleri otomatik WebP'ye cevriliyor
-  (kalite 82, PNG seffafligi korunur); webp/svg/gif/ico atlanir,
-  donusum hatasinda orijinal dosya korunur
-- Donusum Media modelinin creating hook'unda: hem surukle-birak/medya secici
-  yuklemeleri hem Filament form yuklemeleri kapsanir
-- Yeni testler: SiteIdentityAndWebpTest (6); toplam 47/47 geciyor
+- shadcn/ui design token'lari birebir uygulandi: HSL degisken sistemi
+  (background/foreground/muted/border/primary/accent/ring), --radius: 0.5rem
+- Tipografi: Inter, 14px taban, tracking-tight basliklar (text-2xl semibold),
+  text-sm font-medium etiketler, muted-foreground yardimci metinler
+- Butonlar: h-9, rounded-md, zinc-900 default / outline / destructive varyantlari,
+  shadcn odak halkasi (ring-2 + offset)
+- Inputlar: h-9, rounded-md, shadow-xs, ring odakta tek cizgi
+- Sidebar: shadcn sidebar bileseni (zinc-50 zemin, h-8 rounded-md ogeler,
+  accent aktif durum, kucuk uppercase grup etiketleri)
+- Tablolar (muted header, hover satir), sekmeler (muted zemin pill),
+  rozetler, modallar, dropdownlar, breadcrumbs, pagination, repeater,
+  bildirimler ve login sayfasi shadcn diline gecirildi
+- Koyu mod icin tum token'larin dark karsiliklari tanimlandi
+- Sinif adlari Filament v5.6 vendor CSS'inden dogrulandi
+  (fi-color-primary, fi-sidebar-item-btn, fi-tabs-item vb.)
+- Canli onizleme ile dogrulandi: buton zinc-900/14px/36px, kart shadow-sm,
+  etiket 14px/500; 47/47 test geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
