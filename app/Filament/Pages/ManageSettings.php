@@ -77,6 +77,11 @@ class ManageSettings extends Page implements HasForms
                                             ->placeholder('Diyarbakır İçi Tüm Siparişlerde Aynı Gün Teslimat ve Canlı Kurye Takibi!')
                                             ->helperText('Sitenin en üstündeki renkli duyuru şeridinde gösterilir. Boş bırakılırsa şerit gizlenir.')
                                             ->columnSpanFull(),
+                                        Toggle::make('order_tracking_widget_active')
+                                            ->label('Sipariş Takip Sekmesi Aktif')
+                                            ->helperText('Sitenin sağ kenarındaki "Sipariş Takip" sekmesi ve sorgulama kartı.')
+                                            ->inline(false)
+                                            ->default(true),
                                     ]),
                             ]),
 

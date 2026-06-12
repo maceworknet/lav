@@ -156,6 +156,39 @@ class ControlledImprovementsTest extends TestCase
         $this->assertEquals(0, $order->statusHistories()->count());
     }
 
+    public function test_product_carousel_block_can_filter_by_category(): void
+    {
+        $homePage = Page::where('slug', 'ana-sayfa')->firstOrFail();
+        $block = PageBlock::where('page_id', $homePage->id)->where('type', 'product_carousel')->firstOrFail();
+
+        // "Kır Papatyaları Demeti" öne çıkan değil; varsayılanda görünmemeli
+        $this->get('/')->assertDontSee('Kır Papatyaları Demeti');
+
+        // Panelden kategori seçilmiş gibi blok içeriğini güncelle
+        $category = \App\Models\Category::where('slug', 'papatyalar')->firstOrFail();
+        $content = $block->content;
+        $content['carousel_category_id'] = $category->id;
+        $block->update(['content' => $content]);
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Kır Papatyaları Demeti');
+    }
+
+    public function test_order_tracking_widget_renders_and_can_be_disabled(): void
+    {
+        // Varsayılan: aktif
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('otw-card', false);
+        $response->assertSee('Sipariş Takip');
+
+        // Panelden kapatılınca görünmemeli
+        Setting::updateOrCreate(['key' => 'order_tracking_widget_active'], ['value' => '0', 'group' => 'general']);
+
+        $this->get('/')->assertDontSee('otw-card');
+    }
+
     public function test_closed_days_remove_all_delivery_slots(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 6, 10, 6, 0, 0, 'Europe/Istanbul')); // Çarşamba

@@ -452,6 +452,9 @@
         </div>
     </footer>
 
+    <!-- Sipariş Takip Sekmesi (sağ kenar, panelden yönetilir) -->
+    @include('frontend.partials.order-tracking-widget')
+
     <!-- Yukarı Çık Butonu -->
     <button type="button" id="scroll-to-top" aria-label="Yukarı Çık"
         class="fixed right-4 bottom-20 md:bottom-6 z-40 w-10 h-10 md:w-11 md:h-11 rounded-full bg-slate-900/85 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg transition-all duration-300 opacity-0 pointer-events-none"

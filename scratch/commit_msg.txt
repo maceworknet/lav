@@ -1,22 +1,14 @@
-Slider ok hizalama + drag, yukari cik butonu, form duzenleri, HTML mail sablonlari
+Urun karuseline kategori secimi + sag kenarda Siparis Takip sekmesi
 
-- Kategori slider oklari artik kategori gorselinin dikey ortasina hizalaniyor
-  (JS ile olculup resize/yuklemede guncellenir)
-- Kategori slider mouse ile basili tutup suruklenebilir (masaustu) ve
-  parmakla kaydirilabilir (mobil); birakinca en yakin karta yapisir,
-  surukleme sonrasi yanlis tiklamalar engellenir
-- Siteye yukari cik butonu eklendi (400px scroll sonrasi gorunur,
-  mobilde alt menunun ustunde konumlanir)
-- MediaPicker bileseni admin panelde Tailwind utility'leri bulunmadigi icin
-  bozuk gorunuyordu; kendi CSS'i ile yeniden yazildi (kucuk onizleme,
-  duzgun modal, surukle-birak korundu)
-- Kategori, Blog, Teslimat Bolgesi ve Menu duzenleme formlari tam genislik
-  duzene gecirildi (yan yana sikisik sutunlar kaldirildi); menu formundaki
-  tekrarlayan yardim metni tek aciklamaya tasindi
-- Mail sablonlarina HTML destegi: is_html alani (migration), HTML/duz metin
-  secimi, monospace kod editoru ve canli HTML onizleme; HTML sablonlar
-  oldugu gibi gonderilir, duz metin sablonlarda satir sonlari korunur
-- Canli dogrulama: ok-gorsel hizasi ORTALANDI, drag snap calisiyor;
-  53/53 test geciyor
+- Urun karuseli (Cok Satan Urunler) blogu icin panelden kategori secilebiliyor;
+  secilirse o kategorinin urunleri listelenir ve "Tumunu Gor" o kategoriye
+  gider, bos birakilirsa onceki gibi One Cikan urunler gosterilir
+- Sitenin sag kenarina dikey "Siparis Takip" sekmesi eklendi; tiklayinca
+  acilan kartta siparis numarasi sorgulama formu var, Sorgula butonu
+  siparis takip sayfasina yonlendirir (ESC/karartma ile kapanir)
+- Sekme panelden acilip kapatilabilir (Genel Ayarlar > Siparis Takip
+  Sekmesi Aktif)
+- Canli dogrulama: sekme sag kenarda dikey ortada, kart acilip kapaniyor,
+  form /siparis-takip adresine gidiyor; 55/55 test geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

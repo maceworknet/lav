@@ -755,6 +755,26 @@
 
             @if($block->type === 'product_carousel')
                 <!-- Product Grid/Carousel -->
+                @php
+                    // Panelden kategori seçildiyse o kategorinin ürünleri, yoksa öne çıkan ürünler
+                    $carouselLimit = (int) ($content['carousel_limit'] ?? $content['limit'] ?? 8);
+                    $carouselCategory = null;
+                    if (!empty($content['carousel_category_id'])) {
+                        $carouselCategory = \App\Models\Category::where('id', $content['carousel_category_id'])->where('is_active', true)->first();
+                    }
+                    if ($carouselCategory) {
+                        $carouselProducts = $carouselCategory->products()
+                            ->where('stock_status', true)
+                            ->with('images')
+                            ->latest()
+                            ->take($carouselLimit)
+                            ->get();
+                        $carouselAllUrl = route('category', $carouselCategory->slug);
+                    } else {
+                        $carouselProducts = ($featuredProducts ?? collect())->take($carouselLimit);
+                        $carouselAllUrl = route('category', 'guller');
+                    }
+                @endphp
                 <div class="py-24 bg-rose-50/50 border-y border-rose-100/50">
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="flex items-end justify-between mb-12">
@@ -766,7 +786,7 @@
                                     {{ $content['carousel_subtitle'] ?? $content['subtitle'] ?? 'Müşterilerimizin en beğendiği taze aranjmanlar' }}
                                 </p>
                             </div>
-                            <a href="{{ route('category', 'guller') }}" class="hidden sm:inline-flex items-center text-sm font-bold text-rose-600 hover:text-rose-700 transition">
+                            <a href="{{ $carouselAllUrl }}" class="hidden sm:inline-flex items-center text-sm font-bold text-rose-600 hover:text-rose-700 transition">
                                 Tümünü Gör
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 ml-1">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -775,7 +795,7 @@
                         </div>
 
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
-                            @include('frontend.partials.product_cards', ['products' => $featuredProducts])
+                            @include('frontend.partials.product_cards', ['products' => $carouselProducts])
                         </div>
                     </div>
                 </div>

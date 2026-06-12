@@ -160,12 +160,19 @@ class PageForm
                                         // 3. Product Carousel Settings
                                         Group::make()
                                             ->schema([
-                                                Grid::make(3)
+                                                Grid::make(2)
                                                     ->schema([
                                                         TextInput::make('carousel_title')
                                                             ->label('Başlık'),
                                                         TextInput::make('carousel_subtitle')
                                                             ->label('Alt Başlık'),
+                                                        Select::make('carousel_category_id')
+                                                            ->label('Ürün Kategorisi')
+                                                            ->options(fn () => \App\Models\Category::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                                                            ->searchable()
+                                                            ->nullable()
+                                                            ->placeholder('Öne çıkan ürünler (kategori seçilmedi)')
+                                                            ->helperText('Seçilirse bu kategorideki ürünler listelenir; boş bırakılırsa "Öne Çıkan" işaretli ürünler gösterilir.'),
                                                         TextInput::make('carousel_limit')
                                                             ->label('Görüntülenecek Ürün Limiti')
                                                             ->numeric()
