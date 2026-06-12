@@ -1,14 +1,9 @@
-Urun karuseline kategori secimi + sag kenarda Siparis Takip sekmesi
+Siparis takip sekmesi: kose duzeltmesi ve mobilde gizleme
 
-- Urun karuseli (Cok Satan Urunler) blogu icin panelden kategori secilebiliyor;
-  secilirse o kategorinin urunleri listelenir ve "Tumunu Gor" o kategoriye
-  gider, bos birakilirsa onceki gibi One Cikan urunler gosterilir
-- Sitenin sag kenarina dikey "Siparis Takip" sekmesi eklendi; tiklayinca
-  acilan kartta siparis numarasi sorgulama formu var, Sorgula butonu
-  siparis takip sayfasina yonlendirir (ESC/karartma ile kapanir)
-- Sekme panelden acilip kapatilabilir (Genel Ayarlar > Siparis Takip
-  Sekmesi Aktif)
-- Canli dogrulama: sekme sag kenarda dikey ortada, kart acilip kapaniyor,
-  form /siparis-takip adresine gidiyor; 55/55 test geciyor
+- Sekme border-radius degeri 0px 10px 10px 0px olarak duzeltildi
+- Sekme, kart ve karartma mobilde (<768px) tamamen gizleniyor;
+  masaustunde gorunmeye devam ediyor
+- Canli dogrulama: mobilde display none, masaustunde gorunur,
+  computed border-radius 0px 10px 10px 0px
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

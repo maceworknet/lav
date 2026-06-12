@@ -4,10 +4,16 @@
 @endphp
 
 @if($otwActive)
+<style>
+    /* Sipariş takip sekmesi yalnızca masaüstünde gösterilir */
+    @media (max-width: 767px) {
+        #otw-tab, #otw-card, #otw-overlay { display: none !important; }
+    }
+</style>
 <!-- Dikey sekme -->
 <button type="button" id="otw-tab" aria-label="Sipariş Takip"
-    class="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-rose-600 hover:bg-rose-700 text-white rounded-l-xl shadow-lg transition-colors"
-    style="writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); padding: 1rem .55rem; font-size: .75rem; font-weight: 700; letter-spacing: .08em;">
+    class="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-rose-600 hover:bg-rose-700 text-white shadow-lg transition-colors"
+    style="writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); padding: 1rem .55rem; font-size: .75rem; font-weight: 700; letter-spacing: .08em; border-radius: 0px 10px 10px 0px;">
     <span class="inline-flex items-center gap-2">
         Sipariş Takip
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: .9rem; height: .9rem; transform: rotate(90deg);">
