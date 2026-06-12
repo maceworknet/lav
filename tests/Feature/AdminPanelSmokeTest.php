@@ -135,7 +135,9 @@ class AdminPanelSmokeTest extends TestCase
             ->assertStatus(200)
             ->assertSee('E-Posta (SMTP)')
             ->assertSee('Kapalı Günler')
-            ->assertSee('Mobil Görünüm');
+            ->assertSee('Mobil Görünüm')
+            ->assertSee('VAPID Anahtarı Üret')
+            ->assertSee('Zil Sesi Dosyası');
     }
 
     public function test_mobile_menus_are_seeded_and_homepage_renders_mobile_components(): void

@@ -1056,7 +1056,7 @@
                                                 <p class="mt-3 text-xs text-slate-400 leading-relaxed">{{ $post->summary }}</p>
                                             </div>
                                             <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-xs text-slate-400">
-                                                <span>{{ $post->created_at->format('d M Y') }}</span>
+                                                <span>{{ $post->created_at->translatedFormat('d F Y') }}</span>
                                                 <a href="{{ route('blog.detail', $post->slug) }}" class="font-bold text-rose-600 hover:text-rose-700 transition">Devamını Oku</a>
                                             </div>
                                         </div>

@@ -38,6 +38,13 @@ class ManageSettings extends Page implements HasForms
         // JSON olarak saklanan çoklu seçim alanlarını diziye çevir
         $settings['closed_days'] = json_decode($settings['closed_days'] ?? '[]', true) ?: [];
 
+        // Zil sesi: yalnızca public diskte duran (panelden yüklenmiş) dosyalar
+        // FileUpload bileşeninde önizlenebilir; eski yol değerleri boş gösterilir.
+        $bellSound = $settings['admin_notification_bell_sound'] ?? null;
+        if ($bellSound && !\Illuminate\Support\Facades\Storage::disk('public')->exists($bellSound)) {
+            unset($settings['admin_notification_bell_sound']);
+        }
+
         $this->form->fill($settings);
     }
 
@@ -364,10 +371,13 @@ class ManageSettings extends Page implements HasForms
                                         Toggle::make('admin_desktop_notification_active')
                                             ->label('Masaüstü (Tarayıcı) Bildirimi Aktif')
                                             ->default(true),
-                                        TextInput::make('admin_notification_bell_sound')
-                                            ->label('Zil Sesi Dosya Yolu')
-                                            ->default('assets/audio/bell.wav')
-                                            ->required(),
+                                        FileUpload::make('admin_notification_bell_sound')
+                                            ->label('Zil Sesi Dosyası')
+                                            ->disk('public')
+                                            ->directory('audio')
+                                            ->acceptedFileTypes(['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4'])
+                                            ->maxSize(5120)
+                                            ->helperText('MP3, WAV veya OGG yükleyin. Boş bırakılırsa mevcut ses korunur; hiç ses yoksa varsayılan zil çalar.'),
                                         TextInput::make('admin_notification_volume')
                                             ->label('Ses Seviyesi (0.0 - 1.0)')
                                             ->numeric()
@@ -398,6 +408,15 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Web Push Bildirimleri Aktif')
                                             ->default(true)
                                             ->columnSpanFull(),
+                                        \Filament\Forms\Components\Placeholder::make('vapid_info')
+                                            ->hiddenLabel()
+                                            ->columnSpanFull()
+                                            ->content(new \Illuminate\Support\HtmlString(
+                                                '<div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; border:1px solid rgb(228 228 231); border-radius:.6rem; padding:.8rem 1rem;">'
+                                                . '<span style="font-size:.8125rem; color:rgb(113 113 122);">Müşteri bildirimlerinin çalışması için VAPID anahtarları zorunludur. Anahtarlarınız yoksa tek tıkla üretebilirsiniz.</span>'
+                                                . '<button type="button" wire:click="generateVapidKeys" wire:loading.attr="disabled" style="background:rgb(24 24 27); color:#fff; font-size:.75rem; font-weight:700; padding:.5rem 1rem; border-radius:.5rem; border:none; cursor:pointer; white-space:nowrap;">VAPID Anahtarı Üret</button>'
+                                                . '</div>'
+                                            )),
                                         TextInput::make('customer_push_vapid_public_key')
                                             ->label('VAPID Public Key')
                                             ->placeholder('Tarayıcı push aboneliği için genel anahtar')
@@ -438,11 +457,41 @@ class ManageSettings extends Page implements HasForms
             ->statePath('data');
     }
 
+    /**
+     * Müşteri web push bildirimleri için VAPID anahtar çifti üretir
+     * ve form alanlarına doldurur (Kaydet ile kalıcı olur).
+     */
+    public function generateVapidKeys(): void
+    {
+        try {
+            $keys = \Minishlink\WebPush\VAPID::createVapidKeys();
+
+            $this->data['customer_push_vapid_public_key'] = $keys['publicKey'];
+            $this->data['customer_push_vapid_private_key'] = $keys['privateKey'];
+
+            Notification::make()
+                ->title('VAPID anahtarları üretildi.')
+                ->body('Alanlara dolduruldu — kalıcı olması için Kaydet butonuna basın.')
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Anahtar üretilemedi: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
     public function save(): void
     {
         $state = $this->form->getState();
 
         foreach ($state as $key => $value) {
+            // Zil sesi boş bırakıldıysa mevcut ayar korunur (kayıt silinmez)
+            if ($key === 'admin_notification_bell_sound' && blank($value)) {
+                continue;
+            }
+
             // Dizi değerleri (örn. closed_days) JSON olarak sakla
             if (is_array($value)) {
                 $value = json_encode(array_values($value));

@@ -103,7 +103,7 @@
                                         <h4 class="font-bold text-slate-800 text-sm">
                                             {{ $histMap['title'] }}
                                         </h4>
-                                        <span class="text-[10px] text-slate-400 font-semibold">{{ $history->created_at->timezone('Europe/Istanbul')->format('d M Y - H:i') }}</span>
+                                        <span class="text-[10px] text-slate-400 font-semibold">{{ $history->created_at->timezone('Europe/Istanbul')->translatedFormat('d F Y - H:i') }}</span>
                                     </div>
                                     @if($history->note)
                                         <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ $history->note }}</p>

@@ -1,9 +1,17 @@
-Siparis takip sekmesi: kose duzeltmesi ve mobilde gizleme
+Turkce tarihler, bildirim linki, VAPID uretici ve panelden zil sesi yukleme
 
-- Sekme border-radius degeri 0px 10px 10px 0px olarak duzeltildi
-- Sekme, kart ve karartma mobilde (<768px) tamamen gizleniyor;
-  masaustunde gorunmeye devam ediyor
-- Canli dogrulama: mobilde display none, masaustunde gorunur,
-  computed border-radius 0px 10px 10px 0px
+- Siparis gecmisi ve blog tarihlerindeki Ingilizce ay adlari Turkcelestirildi
+  (translatedFormat ile "12 Haziran 2026 - 18:47" bicimi)
+- Admin masaustu bildirimine tiklayinca acilan /admin/orders/{id} linki
+  404 veriyordu; /admin/orders/{id}/edit olarak duzeltildi
+- Musteriye durum bildirimi gitmemesinin koku: VAPID anahtarlari bos
+  oldugunda push servisi sessizce cikiyor. Panele "VAPID Anahtari Uret"
+  butonu eklendi (Musteri Bildirimleri sekmesi) - tek tikla anahtar cifti
+  uretilip alanlara dolduruluyor, Kaydet ile kalici oluyor
+- Zil sesi alani dosya yuklemeye cevrildi: panelden MP3/WAV/OGG yuklenebilir
+  (public/storage/audio altina kaydedilir); bos birakilirsa mevcut ayar
+  korunur, ses cozumlemesi storage yuklemelerini de tarar, dosya yoksa
+  varsayilan zile duser
+- Yeni test: takip sayfasinda Turkce ay adi dogrulamasi; 56/56 geciyor
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>

@@ -189,6 +189,22 @@ class ControlledImprovementsTest extends TestCase
         $this->get('/')->assertDontSee('otw-card');
     }
 
+    public function test_tracking_page_shows_turkish_dates(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 6, 12, 14, 0, 0, 'Europe/Istanbul'));
+
+        $order = $this->createOrder();
+        app(\App\Services\OrderStatusService::class)->updateStatus($order, 'paid', 'System');
+
+        $response = $this->get('/siparis-takip?order_number=' . $order->order_number);
+        $response->assertStatus(200);
+        // Haziran ayı Türkçe görünmeli, İngilizce "Jun" görünmemeli
+        $response->assertSee('Haziran');
+        $response->assertDontSee('12 Jun 2026');
+
+        Carbon::setTestNow();
+    }
+
     public function test_closed_days_remove_all_delivery_slots(): void
     {
         Carbon::setTestNow(Carbon::create(2026, 6, 10, 6, 0, 0, 'Europe/Istanbul')); // Çarşamba
