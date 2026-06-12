@@ -19,7 +19,7 @@
 
             <!-- Products Grid -->
             @if($favorites->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                     @foreach($favorites as $fav)
                         @php
                             $product = $fav->product;

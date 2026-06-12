@@ -176,6 +176,15 @@ class CheckoutService
                 'changed_by' => 'Customer',
             ]);
 
+            // Panel ayarı "Tüm Siparişlerde" ise ödeme beklenmeden admin bildirimi oluştur.
+            $notificationCondition = Setting::where('key', 'admin_notification_condition')->value('value') ?? 'paid_only';
+            if ($notificationCondition === 'all_orders') {
+                app(\App\Services\OrderStatusService::class)->notifyAdminNewOrder(
+                    $order,
+                    "{$orderNumber} numaralı yeni sipariş oluşturuldu (ödeme bekleniyor)."
+                );
+            }
+
             // Clear Cart
             $cart->items()->delete();
             $cart->update(['coupon_code' => null]);

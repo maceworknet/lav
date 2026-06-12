@@ -34,24 +34,24 @@
             </div>
 
             <!-- Detail -->
-            <div class="p-6">
+            <div class="p-3 sm:p-6">
                 <a href="{{ route('product', $product->slug) }}" class="block">
-                    <h3 class="font-serif text-lg font-bold text-slate-800 hover:text-rose-600 transition truncate">{{ $product->name }}</h3>
+                    <h3 class="font-serif text-sm sm:text-lg font-bold text-slate-800 hover:text-rose-600 transition truncate">{{ $product->name }}</h3>
                 </a>
-                <p class="mt-2 text-xs text-slate-400 line-clamp-2 leading-relaxed">{{ $product->short_description }}</p>
+                <p class="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-400 line-clamp-2 leading-relaxed">{{ $product->short_description }}</p>
             </div>
         </div>
 
-        <div class="p-6 pt-0 border-t border-slate-50 flex items-center justify-between gap-4 mt-auto">
+        <div class="p-3 sm:p-6 pt-0 sm:pt-0 border-t border-slate-50 flex items-center justify-between gap-2 sm:gap-4 mt-auto">
             <div class="flex flex-col">
                 @if($product->discount_price)
-                    <span class="text-xs text-slate-400 line-through">₺{{ number_format($product->price, 2) }}</span>
-                    <span class="text-lg font-black text-rose-600">₺{{ number_format($product->discount_price, 2) }}</span>
+                    <span class="text-[11px] sm:text-xs text-slate-400 line-through">₺{{ number_format($product->price, 2) }}</span>
+                    <span class="text-sm sm:text-lg font-black text-rose-600">₺{{ number_format($product->discount_price, 2) }}</span>
                 @else
-                    <span class="text-lg font-black text-slate-800">₺{{ number_format($product->price, 2) }}</span>
+                    <span class="text-sm sm:text-lg font-black text-slate-800">₺{{ number_format($product->price, 2) }}</span>
                 @endif
             </div>
-            <a href="{{ route('product', $product->slug) }}" class="p-3 bg-slate-900 text-white rounded-xl hover:bg-rose-600 shadow-sm hover:shadow-rose-100 transition duration-300">
+            <a href="{{ route('product', $product->slug) }}" class="p-2 sm:p-3 bg-slate-900 text-white rounded-lg sm:rounded-xl hover:bg-rose-600 shadow-sm hover:shadow-rose-100 transition duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.3 21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
                     <path d="M13.4,9v-4.5c0-2.1-1.7-3.8-3.8-3.8s-3.8,1.7-3.8,3.8v4.5M17.2,7l1.3,12c0,.7-.5,1.2-1.1,1.2H1.9c-.6,0-1.1-.5-1.1-1.1,0,0,0,0,0-.1l1.3-12c0-.6.5-1,1.1-1h13c.6,0,1.1.4,1.1,1ZM6.3,9c0,.2-.2.4-.4.4s-.4-.2-.4-.4.2-.4.4-.4.4.2.4.4ZM13.8,9c0,.2-.2.4-.4.4s-.4-.2-.4-.4.2-.4.4-.4.4.2.4.4Z"/>
                     <path d="M13.3,13.2c0-1-.8-1.8-1.9-1.8s-1.4.4-1.7,1.1c-.3-.6-.9-1.1-1.7-1.1-1,0-1.9.8-1.9,1.8,0,2.9,3.6,4.8,3.6,4.8,0,0,3.6-1.9,3.6-4.8Z"/>

@@ -14,6 +14,7 @@ class MenuItem extends Model
         'title',
         'url',
         'target',
+        'icon',
         'order',
         'is_active',
     ];

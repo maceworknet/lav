@@ -20,6 +20,7 @@ class CategoryForm
         return $schema
             ->components([
                 Section::make('Kategori Bilgileri')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -54,22 +55,27 @@ class CategoryForm
                     ]),
 
                 Section::make('Durum ve Görünüm')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(3)
                             ->schema([
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true),
                                 Toggle::make('show_on_header')
                                     ->label('Header\'da Göster')
+                                    ->inline(false)
                                     ->default(false),
                                 Toggle::make('show_on_homepage')
                                     ->label('Ana Sayfada Göster')
+                                    ->inline(false)
                                     ->default(false),
                             ]),
                     ]),
 
                 Section::make('SEO Ayarları')
+                    ->columnSpanFull()
                     ->collapsed()
                     ->schema([
                         TextInput::make('meta_title')

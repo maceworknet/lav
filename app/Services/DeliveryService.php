@@ -176,6 +176,12 @@ class DeliveryService
             return [];
         }
 
+        // 2b. Kapalı günler kontrolü (panelden yönetilir, ISO hafta günü: 1=Pzt ... 7=Paz)
+        $closedDays = json_decode($settings['closed_days'] ?? '[]', true) ?: [];
+        if (in_array((string) $targetDate->isoWeekday(), array_map('strval', $closedDays), true)) {
+            return [];
+        }
+
         // 3. Cutoff time check for today
         if ($targetDate->equalTo($today) && $cutoffTimeSetting) {
             $cutoff = Carbon::now($timezone)->setTimeFromTimeString($cutoffTimeSetting);
@@ -269,9 +275,10 @@ class DeliveryService
             return ['valid' => false, 'message' => 'Belirtilen mahalle bu ilçe sınırlarında bulunamadı.'];
         }
 
-        // Check date
-        $targetDate = Carbon::parse($dateString)->startOfDay();
-        if ($targetDate->lt(Carbon::today())) {
+        // Check date (panel timezone ayarına göre)
+        $timezone = \App\Models\Setting::where('key', 'timezone')->value('value') ?? 'Europe/Istanbul';
+        $targetDate = Carbon::parse($dateString)->setTimezone($timezone)->startOfDay();
+        if ($targetDate->lt(Carbon::today($timezone))) {
             return ['valid' => false, 'message' => 'Teslimat tarihi geçmiş bir tarih olamaz.'];
         }
 

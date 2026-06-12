@@ -83,16 +83,13 @@ class Order extends Model
                     \Illuminate\Support\Facades\Log::error("OrderStatusHistory log error: " . $e->getMessage());
                 }
 
-                // Create AdminOrderNotification if status is paid
+                // Create AdminOrderNotification if status is paid (dedupe servis içinde)
                 if ($order->status === 'paid') {
                     try {
-                        \App\Models\AdminOrderNotification::create([
-                            'order_id' => $order->id,
-                            'type' => 'new_order',
-                            'title' => 'Yeni Sipariş Alındı!',
-                            'message' => "{$order->order_number} numaralı sipariş başarıyla ödendi ve alındı.",
-                            'is_seen' => false,
-                        ]);
+                        app(\App\Services\OrderStatusService::class)->notifyAdminNewOrder(
+                            $order,
+                            "{$order->order_number} numaralı sipariş başarıyla ödendi ve alındı."
+                        );
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error("AdminOrderNotification error: " . $e->getMessage());
                     }

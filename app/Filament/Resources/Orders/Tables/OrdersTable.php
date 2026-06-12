@@ -98,10 +98,13 @@ class OrdersTable
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data): void {
-                        $record->update([
-                            'status' => $data['status'],
-                        ]);
-                        
+                        // Merkezi servis: durum geçmişi + müşteri push bildirimi tetiklenir.
+                        app(\App\Services\OrderStatusService::class)->updateStatus(
+                            $record,
+                            $data['status'],
+                            auth()->user()?->name ?? 'Admin'
+                        );
+
                         \Filament\Notifications\Notification::make()
                             ->title('Sipariş durumu başarıyla güncellendi.')
                             ->success()

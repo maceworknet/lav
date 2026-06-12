@@ -18,9 +18,19 @@ class MediaResource extends Resource
 {
     protected static ?string $model = Media::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?string $navigationLabel = 'Medya Kütüphanesi';
+
+    protected static ?string $modelLabel = 'Medya';
+
+    protected static ?string $pluralModelLabel = 'Medya Kütüphanesi';
+
+    protected static \UnitEnum|string|null $navigationGroup = 'Site Yönetimi';
+
+    protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
     {

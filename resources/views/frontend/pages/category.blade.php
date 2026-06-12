@@ -73,7 +73,7 @@
 
             <!-- Products Grid -->
             @if($products->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                     @foreach($products as $product)
                         <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-rose-600 transition duration-300 flex flex-col justify-between product-card-container">
                             <div>

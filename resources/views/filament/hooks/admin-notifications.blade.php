@@ -3,7 +3,20 @@
     $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
     $active = filter_var($settings['admin_audio_notification_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
     $desktopActive = filter_var($settings['admin_desktop_notification_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
-    $bellSound = $settings['admin_notification_bell_sound'] ?? 'assets/audio/bell.mp3';
+    // Zil sesi: panelden yüklenen dosya (storage), elle girilmiş public yolu
+    // veya varsayılan zil — hangisi mevcutsa o kullanılır.
+    $bellSetting = $settings['admin_notification_bell_sound'] ?? 'assets/audio/bell.wav';
+    $bellSoundUrl = '';
+    if ($bellSetting) {
+        if (file_exists(public_path('storage/' . $bellSetting))) {
+            $bellSoundUrl = asset('storage/' . $bellSetting);
+        } elseif (file_exists(public_path($bellSetting))) {
+            $bellSoundUrl = asset($bellSetting);
+        }
+    }
+    if (!$bellSoundUrl && file_exists(public_path('assets/audio/bell.wav'))) {
+        $bellSoundUrl = asset('assets/audio/bell.wav');
+    }
     $volume = (float)($settings['admin_notification_volume'] ?? 1.0);
     $interval = (int)($settings['admin_notification_polling_interval'] ?? 15);
 @endphp
@@ -92,7 +105,7 @@
     const notifConfig = {
         audioActive: {{ $active ? 'true' : 'false' }},
         desktopActive: {{ $desktopActive ? 'true' : 'false' }},
-        bellSound: "{{ asset($bellSound) }}",
+        bellSound: "{{ $bellSoundUrl }}",
         volume: {{ $volume }},
         interval: {{ $interval * 1000 }}
     };
@@ -162,7 +175,7 @@
             const notif = new Notification(title, options);
             notif.onclick = function() {
                 window.focus();
-                window.location.href = '/admin/orders/' + orderId;
+                window.location.href = '/admin/orders/' + orderId + '/edit';
             };
         }
     }

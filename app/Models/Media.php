@@ -22,6 +22,17 @@ class Media extends Model
     {
         static::creating(function ($media) {
             if ($media->file_path && Storage::disk('public')->exists($media->file_path)) {
+                // Yüklenen görseli otomatik olarak WebP formatına çevir.
+                // Dönüşüm başarısız olursa orijinal dosya korunur.
+                try {
+                    $webpPath = app(\App\Services\ImageService::class)->convertToWebp($media->file_path);
+                    if ($webpPath) {
+                        $media->file_path = $webpPath;
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Medya WebP dönüşümü başarısız: ' . $e->getMessage());
+                }
+
                 if (empty($media->name)) {
                     $media->name = basename($media->file_path);
                 }

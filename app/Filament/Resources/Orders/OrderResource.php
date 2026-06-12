@@ -25,6 +25,26 @@ class OrderResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Siparişler';
     protected static ?int $navigationSort = 1;
 
+    /**
+     * Menüde işlem bekleyen (ödenmiş/hazırlanan) sipariş sayısını göster.
+     */
+    public static function getNavigationBadge(): ?string
+    {
+        $count = Order::whereIn('status', ['paid', 'preparing'])->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'İşlem bekleyen siparişler';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return OrderForm::configure($schema);

@@ -2,6 +2,77 @@
     :component="$getFieldWrapperView()"
     :field="$field"
 >
+    @once
+    <style>
+        /* MediaPicker — admin panelde Tailwind utility'leri bulunmadığından kendi stilleri ile çalışır */
+        .mp-row { display: flex; align-items: center; gap: 1rem; }
+        .mp-preview { position: relative; width: 7rem; height: 7rem; border-radius: .75rem; overflow: hidden; background: rgb(250 250 250); border: 1px solid rgb(228 228 231); box-shadow: 0 1px 2px rgb(0 0 0 / .05); flex-shrink: 0; }
+        .mp-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .mp-preview-overlay { position: absolute; inset: 0; background: rgb(24 24 27 / .6); opacity: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; transition: opacity .2s; }
+        .mp-preview:hover .mp-preview-overlay { opacity: 1; }
+        .mp-ov-btn { padding: .4rem; border-radius: .5rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mp-ov-btn svg { width: 1rem; height: 1rem; }
+        .mp-ov-edit { background: #fff; color: rgb(24 24 27); }
+        .mp-ov-del { background: rgb(220 38 38); color: #fff; }
+        .mp-empty { width: 7rem; height: 7rem; border-radius: .75rem; border: 2px dashed rgb(212 212 216); background: rgb(250 250 250); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; color: rgb(161 161 170); transition: border-color .15s, color .15s; flex-shrink: 0; }
+        .mp-empty:hover { border-color: rgb(24 24 27); color: rgb(24 24 27); }
+        .mp-empty svg { width: 1.75rem; height: 1.75rem; }
+        .mp-empty span { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+        .mp-side { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+        .mp-choose-btn { padding: .5rem 1rem; border: 1px solid rgb(228 228 231); background: #fff; border-radius: .5rem; font-size: .75rem; font-weight: 600; cursor: pointer; color: rgb(63 63 70); transition: background .15s, border-color .15s; white-space: nowrap; }
+        .mp-choose-btn:hover { background: rgb(244 244 245); border-color: rgb(161 161 170); }
+        .mp-path { font-size: .6875rem; color: rgb(161 161 170); font-weight: 500; word-break: break-all; }
+        .dark .mp-preview { background: rgb(39 39 42); border-color: rgb(63 63 70); }
+        .dark .mp-empty { background: rgb(39 39 42); border-color: rgb(63 63 70); }
+        .dark .mp-choose-btn { background: rgb(24 24 27); border-color: rgb(63 63 70); color: rgb(212 212 216); }
+
+        /* Modal */
+        .mp-modal { position: fixed; inset: 0; z-index: 999; overflow-y: auto; }
+        .mp-backdrop { position: fixed; inset: 0; background: rgb(24 24 27 / .6); backdrop-filter: blur(3px); }
+        .mp-modal-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; }
+        .mp-window { position: relative; z-index: 10; background: #fff; border-radius: .9rem; overflow: hidden; border: 1px solid rgb(228 228 231); box-shadow: 0 20px 50px rgb(0 0 0 / .2); max-width: 56rem; width: 100%; height: 80vh; display: flex; flex-direction: column; }
+        .dark .mp-window { background: rgb(24 24 27); border-color: rgb(63 63 70); }
+        .mp-head { padding: .9rem 1.4rem; border-bottom: 1px solid rgb(228 228 231); display: flex; align-items: center; justify-content: space-between; background: rgb(250 250 250); }
+        .dark .mp-head { background: rgb(39 39 42); border-color: rgb(63 63 70); }
+        .mp-head h3 { margin: 0; font-size: .95rem; font-weight: 700; color: rgb(24 24 27); }
+        .dark .mp-head h3 { color: #fff; }
+        .mp-close { background: none; border: none; cursor: pointer; color: rgb(161 161 170); padding: .25rem; }
+        .mp-close:hover { color: rgb(220 38 38); }
+        .mp-close svg { width: 1.4rem; height: 1.4rem; }
+        .mp-toolbar { padding: 1rem 1.4rem; border-bottom: 1px solid rgb(228 228 231); display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+        .dark .mp-toolbar { border-color: rgb(63 63 70); }
+        .mp-search { position: relative; flex: 1 1 200px; max-width: 300px; }
+        .mp-search input { width: 100%; padding: .55rem .9rem .55rem 2.3rem; border: 1px solid rgb(228 228 231); border-radius: .5rem; font-size: .8125rem; outline: none; }
+        .mp-search input:focus { border-color: rgb(161 161 170); box-shadow: 0 0 0 3px rgb(228 228 231 / .6); }
+        .dark .mp-search input { background: rgb(39 39 42); border-color: rgb(63 63 70); color: #fff; }
+        .mp-search svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); width: .95rem; height: .95rem; color: rgb(161 161 170); }
+        .mp-upload-btn { display: inline-flex; align-items: center; gap: .45rem; background: rgb(24 24 27); color: #fff; font-size: .75rem; font-weight: 700; padding: .6rem 1.1rem; border-radius: .5rem; border: none; cursor: pointer; }
+        .mp-upload-btn:hover { background: rgb(39 39 42); }
+        .mp-upload-btn[disabled] { opacity: .5; }
+        .mp-upload-btn svg { width: .95rem; height: .95rem; }
+        .mp-body { flex: 1; overflow-y: auto; padding: 1.4rem; background: rgb(250 250 250 / .6); }
+        .dark .mp-body { background: rgb(24 24 27); }
+        .mp-body.mp-drag { outline: 2px dashed rgb(24 24 27); outline-offset: -8px; background: rgb(244 244 245); }
+        .mp-drag-hint { text-align: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: rgb(220 38 38); margin-bottom: .9rem; }
+        .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .9rem; }
+        .mp-item { position: relative; aspect-ratio: 1/1; background: #fff; border-radius: .6rem; overflow: hidden; border: 1px solid rgb(228 228 231); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+        .mp-item:hover { border-color: rgb(161 161 170); box-shadow: 0 2px 6px rgb(0 0 0 / .08); }
+        .mp-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .mp-item.mp-selected { border-color: rgb(24 24 27); box-shadow: 0 0 0 2px rgb(24 24 27); }
+        .mp-item-check { position: absolute; top: .4rem; right: .4rem; background: rgb(24 24 27); color: #fff; border-radius: 999px; padding: .22rem; display: flex; }
+        .mp-item-check svg { width: .8rem; height: .8rem; }
+        .mp-item-name { position: absolute; inset-inline: 0; bottom: 0; background: linear-gradient(transparent, rgb(0 0 0 / .7)); color: #fff; font-size: .58rem; font-weight: 600; padding: 1rem .45rem .35rem; opacity: 0; transition: opacity .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mp-item:hover .mp-item-name { opacity: 1; }
+        .mp-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; gap: .7rem; color: rgb(161 161 170); font-size: .8125rem; font-weight: 600; }
+        .mp-spinner { width: 2.2rem; height: 2.2rem; border: 3px solid rgb(228 228 231); border-top-color: rgb(24 24 27); border-radius: 999px; animation: mp-spin .8s linear infinite; }
+        @keyframes mp-spin { to { transform: rotate(360deg); } }
+        .mp-foot { padding: .85rem 1.4rem; border-top: 1px solid rgb(228 228 231); display: flex; justify-content: flex-end; background: rgb(250 250 250); }
+        .dark .mp-foot { background: rgb(39 39 42); border-color: rgb(63 63 70); }
+        .mp-foot-btn { padding: .55rem 1.2rem; background: #fff; border: 1px solid rgb(228 228 231); color: rgb(63 63 70); font-size: .75rem; font-weight: 700; border-radius: .5rem; cursor: pointer; }
+        .mp-foot-btn:hover { background: rgb(244 244 245); }
+    </style>
+    @endonce
+
     <div x-data="{
         open: false,
         state: $wire.entangle('{{ $getStatePath() }}'),
@@ -9,6 +80,7 @@
         search: '',
         isLoading: false,
         isUploading: false,
+        dragActive: false,
         init() {
             this.$watch('search', () => this.loadMedia());
         },
@@ -38,215 +110,158 @@
             return '/storage/' + this.state;
         },
         async handleFileUpload(event) {
-            let files = event.target.files;
-            if (!files || files.length === 0) return;
-            
-            let formData = new FormData();
-            formData.append('file', files[0]);
-            
+            await this.uploadFiles(event.target.files);
+            event.target.value = '';
+        },
+        async handleDrop(event) {
+            this.dragActive = false;
+            if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+                await this.uploadFiles(event.dataTransfer.files);
+            }
+        },
+        async uploadFiles(files) {
+            let list = Array.from(files || []).filter(f => f.type.startsWith('image/'));
+            if (list.length === 0) return;
+
             this.isUploading = true;
-            try {
-                let csrfToken = document.querySelector('meta[name=&quot;csrf-token&quot;]')?.getAttribute('content') || '';
-                let response = await fetch('/admin/api/media/upload', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
+            let lastUploadedPath = null;
+            let csrfToken = document.querySelector('meta[name=&quot;csrf-token&quot;]')?.getAttribute('content') || '';
+
+            for (let file of list) {
+                let formData = new FormData();
+                formData.append('file', file);
+                try {
+                    let response = await fetch('/admin/api/media/upload', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
+                    let data = await response.json();
+                    if (data.success) {
+                        lastUploadedPath = data.media.file_path;
+                    } else {
+                        alert('Yükleme başarısız: ' + (data.message || 'Bilinmeyen hata'));
                     }
-                });
-                let data = await response.json();
-                if (data.success) {
-                    await this.loadMedia();
-                    this.selectImage(data.media.file_path);
-                } else {
-                    alert('Yükleme başarısız: ' + (data.message || 'Bilinmeyen hata'));
+                } catch (e) {
+                    console.error('Upload error:', e);
+                    alert('Yükleme sırasında bir hata oluştu.');
                 }
-            } catch (e) {
-                console.error('Upload error:', e);
-                alert('Yükleme sırasında bir hata oluştu.');
+            }
+
+            await this.loadMedia();
+            if (lastUploadedPath) {
+                this.selectImage(lastUploadedPath);
             }
             this.isUploading = false;
-            event.target.value = '';
         }
-    }"
-    class="space-y-2"
-    >
-        <!-- Preview of the selected image -->
-        <div class="flex items-center gap-4">
+    }">
+        <!-- Seçili görsel önizleme -->
+        <div class="mp-row">
             <template x-if="state">
-                <div class="relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-sm group">
-                    <img :src="getPreviewUrl()" class="w-full h-full object-cover">
-                    <!-- Overlay with remove and details -->
-                    <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition duration-200">
-                        <button type="button" @click="open = true; loadMedia()" class="p-1.5 bg-white text-slate-800 rounded-lg hover:bg-rose-50 transition shadow" title="Değiştir">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
+                <div class="mp-preview">
+                    <img :src="getPreviewUrl()">
+                    <div class="mp-preview-overlay">
+                        <button type="button" @click="open = true; loadMedia()" class="mp-ov-btn mp-ov-edit" title="Değiştir">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
-                        <button type="button" @click="removeImage()" class="p-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow" title="Kaldır">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                        <button type="button" @click="removeImage()" class="mp-ov-btn mp-ov-del" title="Kaldır">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                     </div>
                 </div>
             </template>
             <template x-if="!state">
-                <div @click="open = true; loadMedia()" class="w-28 h-28 rounded-2xl border-2 border-dashed border-slate-300 hover:border-rose-500 bg-slate-50 hover:bg-rose-50/10 cursor-pointer flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-rose-600 transition group">
-                    <svg class="w-8 h-8 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                    <span class="text-[10px] font-bold uppercase tracking-wider">Görsel Seç</span>
+                <div @click="open = true; loadMedia()" class="mp-empty">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                    <span>Görsel Seç</span>
                 </div>
             </template>
-            
-            <div class="space-y-1">
-                <button type="button" @click="open = true; loadMedia()" class="px-4 py-2 border border-slate-300 hover:border-rose-500 hover:text-rose-600 rounded-xl hover:bg-slate-50 transition text-xs font-bold uppercase tracking-wider focus:outline-none">
+
+            <div class="mp-side">
+                <button type="button" @click="open = true; loadMedia()" class="mp-choose-btn">
                     Medya Kütüphanesinden Seç
                 </button>
-                <p class="text-[10px] text-slate-400 font-semibold" x-text="state ? 'Seçilen Dosya: ' + state : 'Görsel seçilmedi'"></p>
+                <p class="mp-path" x-text="state ? state : 'Görsel seçilmedi'"></p>
             </div>
         </div>
 
-        <!-- Popup Modal Window -->
-        <div 
-            x-show="open" 
-            class="fixed inset-0 z-[999] overflow-y-auto" 
-            style="display: none;"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-        >
-            <!-- Backdrop -->
-            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="open = false"></div>
+        <!-- Modal -->
+        <div x-show="open" class="mp-modal" style="display: none;" x-transition.opacity>
+            <div class="mp-backdrop" @click="open = false"></div>
 
-            <!-- Modal Container -->
-            <div class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-                <div 
-                    x-show="open"
-                    x-transition:enter="transition ease-out duration-300 transform"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="transition ease-in duration-200 transform"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 max-w-4xl w-full flex flex-col h-[80vh] relative z-10"
-                >
-                    <!-- Modal Header -->
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xl">🖼️</span>
-                            <h3 class="text-base font-extrabold text-slate-800 font-serif">Medya Kütüphanesi</h3>
-                        </div>
-                        <button type="button" @click="open = false" class="text-slate-400 hover:text-rose-600 transition">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+            <div class="mp-modal-wrap">
+                <div class="mp-window" x-show="open" x-transition>
+                    <!-- Başlık -->
+                    <div class="mp-head">
+                        <h3>🖼️ Medya Kütüphanesi</h3>
+                        <button type="button" @click="open = false" class="mp-close">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
 
-                    <!-- Modal Actions (Search & Upload) -->
-                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-white">
-                        <!-- Search Bar -->
-                        <div class="relative w-full sm:max-w-xs">
-                            <input 
-                                type="text" 
-                                x-model.debounce.300ms="search" 
-                                placeholder="Görsel ara..." 
-                                class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition font-semibold"
-                            >
-                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
+                    <!-- Arama + Yükleme -->
+                    <div class="mp-toolbar">
+                        <div class="mp-search">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            <input type="text" x-model.debounce.300ms="search" placeholder="Görsel ara...">
                         </div>
-
-                        <!-- Upload File Button -->
                         <div>
-                            <input 
-                                type="file" 
-                                id="modal-file-input-{{ $getId() }}" 
-                                @change="handleFileUpload($event)" 
-                                class="hidden" 
-                                accept="image/*"
-                            >
-                            <button 
-                                type="button" 
-                                onclick="document.getElementById('modal-file-input-{{ $getId() }}').click()" 
-                                class="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider py-3 px-5 rounded-xl transition shadow-lg hover:shadow-rose-100 disabled:opacity-50"
-                                :disabled="isUploading"
-                            >
-                                <template x-if="isUploading">
-                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </template>
-                                <template x-if="!isUploading">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </template>
-                                <span x-text="isUploading ? 'Yükleniyor...' : 'YENİ DOSYA YÜKLE'"></span>
+                            <input type="file" id="modal-file-input-{{ $getId() }}" @change="handleFileUpload($event)" class="hidden" style="display:none" multiple accept="image/*">
+                            <button type="button" onclick="document.getElementById('modal-file-input-{{ $getId() }}').click()" class="mp-upload-btn" :disabled="isUploading">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                <span x-text="isUploading ? 'Yükleniyor...' : 'Dosya Yükle'"></span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Modal Body (Grid of Images) -->
-                    <div class="flex-grow overflow-y-auto p-6 bg-slate-50/50">
+                    <!-- Görsel ızgarası (sürükle-bırak destekli) -->
+                    <div
+                        class="mp-body"
+                        :class="dragActive ? 'mp-drag' : ''"
+                        @dragover.prevent="dragActive = true"
+                        @dragleave.prevent="dragActive = false"
+                        @drop.prevent="handleDrop($event)"
+                    >
+                        <div x-show="dragActive" class="mp-drag-hint">Dosyaları buraya bırakın — kütüphaneye yüklenecek</div>
+
                         <template x-if="isLoading">
-                            <div class="flex flex-col items-center justify-center py-20 gap-3">
-                                <div class="w-10 h-10 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin"></div>
-                                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Yükleniyor...</p>
+                            <div class="mp-state">
+                                <div class="mp-spinner"></div>
+                                <span>Yükleniyor...</span>
                             </div>
                         </template>
 
                         <template x-if="!isLoading && mediaItems.length === 0">
-                            <div class="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
-                                <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                                </svg>
-                                <p class="text-sm font-semibold text-slate-500">Medya kütüphanesinde dosya bulunamadı.</p>
+                            <div class="mp-state">
+                                <span>Medya kütüphanesinde dosya bulunamadı.</span>
+                                <span style="font-weight:500; font-size:.75rem;">Görselleri buraya sürükleyip bırakabilirsiniz.</span>
                             </div>
                         </template>
 
                         <template x-if="!isLoading && mediaItems.length > 0">
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                            <div class="mp-grid">
                                 <template x-for="item in mediaItems" :key="item.id">
-                                    <div 
+                                    <div
                                         @click="selectImage(item.file_path)"
-                                        class="group relative aspect-square bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-rose-500 cursor-pointer shadow-sm hover:shadow-md transition duration-300 flex items-center justify-center"
-                                        :class="state === item.file_path ? 'border-rose-600 ring-2 ring-rose-500/20' : ''"
+                                        class="mp-item"
+                                        :class="state === item.file_path ? 'mp-selected' : ''"
                                     >
-                                        <img :src="item.url" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
-                                        
-                                        <!-- Selected checkmark badge -->
-                                        <div x-show="state === item.file_path" class="absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1 shadow-md">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
+                                        <img :src="item.url" loading="lazy">
+                                        <div x-show="state === item.file_path" class="mp-item-check">
+                                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         </div>
-
-                                        <!-- Hover detail label -->
-                                        <div class="absolute inset-x-0 bottom-0 bg-slate-900/70 p-2 opacity-0 group-hover:opacity-100 transition duration-200">
-                                            <p class="text-[9px] font-bold text-white truncate" x-text="item.name"></p>
-                                            <p class="text-[8px] text-slate-300 font-semibold mt-0.5" x-text="item.file_size ? (item.file_size/1024).toFixed(1) + ' KB' : ''"></p>
-                                        </div>
+                                        <div class="mp-item-name" x-text="item.name"></div>
                                     </div>
                                 </template>
                             </div>
                         </template>
                     </div>
 
-                    <!-- Modal Footer -->
-                    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-                        <button type="button" @click="open = false" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition uppercase tracking-wider focus:outline-none">
-                            KAPAT
-                        </button>
+                    <!-- Alt -->
+                    <div class="mp-foot">
+                        <button type="button" @click="open = false" class="mp-foot-btn">Kapat</button>
                     </div>
                 </div>
             </div>

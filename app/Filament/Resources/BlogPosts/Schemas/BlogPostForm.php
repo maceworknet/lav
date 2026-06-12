@@ -20,6 +20,7 @@ class BlogPostForm
         return $schema
             ->components([
                 Section::make('Blog Yazı Bilgileri')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -41,6 +42,7 @@ class BlogPostForm
                                     ->required(),
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true),
                             ]),
                         Textarea::make('summary')
@@ -57,6 +59,7 @@ class BlogPostForm
                     ]),
 
                 Section::make('SEO Ayarları')
+                    ->columnSpanFull()
                     ->collapsed()
                     ->schema([
                         TextInput::make('meta_title')

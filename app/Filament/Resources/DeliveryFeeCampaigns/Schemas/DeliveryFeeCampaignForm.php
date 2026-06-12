@@ -78,6 +78,7 @@ class DeliveryFeeCampaignForm
                                 TextInput::make('discount_value')
                                     ->label('İndirim Değeri')
                                     ->numeric()
+                                    ->helperText('Yüzdesel indirimde % değeri (örn. 70), sabit indirimde TL tutarı girin.')
                                     ->visible(fn ($get) => $get('type') === 'discount')
                                     ->required(fn ($get) => $get('type') === 'discount'),
 
@@ -106,6 +107,7 @@ class DeliveryFeeCampaignForm
                                     ->columnSpanFull(),
                                 Toggle::make('is_active')
                                     ->label('Aktif mi')
+                                    ->inline(false)
                                     ->default(true)
                                     ->columnSpanFull(),
                             ]),

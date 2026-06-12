@@ -28,6 +28,11 @@ class NotificationService
                 'body' => "Merhaba {$order->sender_name},\n\nSiparişiniz ({$order->order_number}) tasarım ekibimiz tarafından özenle hazırlanmaya başlandı! Tamamlandığında kuryemize teslim edilecektir.\n\nSaygılarımızla,\n{$siteName}",
                 'sms' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz özenle hazırlanmaya başlanmıştır."
             ],
+            'assigned_to_courier' => [
+                'subject' => "Siparişiniz Kuryeye Verildi - {$order->order_number}",
+                'body' => "Merhaba {$order->sender_name},\n\nSiparişiniz ({$order->order_number}) kuryemize teslim edilmiştir. Kısa süre içinde dağıtıma çıkacaktır.\n\nSaygılarımızla,\n{$siteName}",
+                'sms' => "Sayın {$order->sender_name}, {$order->order_number} nolu siparişiniz kuryemize teslim edilmiştir."
+            ],
             'on_delivery' => [
                 'subject' => "Siparişiniz Yola Çıktı - {$order->order_number}",
                 'body' => "Merhaba {$order->sender_name},\n\nSiparişiniz ({$order->order_number}) kuryemize teslim edilmiş ve alıcısına ulaştırılmak üzere yola çıkmıştır.\n\nSaygılarımızla,\n{$siteName}",
@@ -51,13 +56,28 @@ class NotificationService
 
         $template = $messages[$status];
 
-        // 1. Send Email (via raw log/mail driver)
+        // 1. Send Email (panelden yönetilen şablonlar + SMTP ayarları ile)
         try {
-            Mail::raw($template['body'], function ($message) use ($order, $template, $siteName) {
-                $message->to($order->sender_email)
-                    ->subject($template['subject'])
-                    ->from(config('mail.from.address', 'hello@example.com'), $siteName);
-            });
+            $mailService = app(\App\Services\MailService::class);
+            $orderData = $mailService->orderData($order);
+
+            $sent = $mailService->sendTemplate("order_{$status}", $order->sender_email, $orderData);
+
+            // Şablon yoksa eski gömülü metinlerle gönder (geriye dönük uyumluluk)
+            if (!$sent && !\App\Models\MailTemplate::where('key', "order_{$status}")->exists()) {
+                $mailService->applySmtpSettings();
+                Mail::raw($template['body'], function ($message) use ($order, $template, $siteName) {
+                    $message->to($order->sender_email)
+                        ->subject($template['subject'])
+                        ->from(config('mail.from.address', 'hello@example.com'), $siteName);
+                });
+            }
+
+            // Yeni sipariş (ödeme onayı) site sahibine de bildirilir
+            if ($status === 'paid') {
+                $mailService->sendTemplateToAdmin('admin_new_order', $orderData);
+            }
+
             Log::info("Email notification sent for order {$order->order_number} status {$status}");
         } catch (\Exception $e) {
             Log::error("Failed to send email notification for order {$order->order_number}: " . $e->getMessage());

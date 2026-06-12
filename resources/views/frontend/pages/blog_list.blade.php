@@ -31,7 +31,7 @@
                                     <p class="mt-3 text-xs text-slate-400 leading-relaxed line-clamp-3">{{ $post->summary }}</p>
                                 </div>
                                 <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                    <span>{{ $post->created_at->timezone('Europe/Istanbul')->format('d M Y') }}</span>
+                                    <span>{{ $post->created_at->timezone('Europe/Istanbul')->translatedFormat('d F Y') }}</span>
                                     <a href="{{ route('blog.detail', $post->slug) }}" class="font-black text-rose-600 hover:text-rose-700 transition">Devamını Oku</a>
                                 </div>
                             </div>

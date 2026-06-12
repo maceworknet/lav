@@ -501,7 +501,7 @@
             @if($relatedProducts->count() > 0)
                 <div class="mt-24 border-t border-slate-100 pt-16">
                     <h2 class="text-2xl font-extrabold text-slate-900 font-serif mb-8 text-center">Benzer Ürünler</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                         @foreach($relatedProducts as $rel)
                             <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-rose-600 transition duration-300 flex flex-col justify-between product-card-container">
                                 <div>
